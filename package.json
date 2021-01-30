@@ -32,6 +32,7 @@
     "webpack-dev-server": "^3.11.2"
   },
   "dependencies": {
-    "normalize.css": "^8.0.1"
+    "normalize.css": "^8.0.1",
+    "phaser": "^3.52.0"
   }
 }
