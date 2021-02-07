@@ -1,10 +1,12 @@
 import os
+
 import django_heroku
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = "6$Df;f3lE:q#I:A6DkKl5/REX%NNel"
 ALLOWED_HOSTS = []
 INSTALLED_APPS = [
+    "polymorphic",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -15,7 +17,9 @@ INSTALLED_APPS = [
     "rest_framework",
     "constance",
     "constance.backends.database",
+    "player",
     "broker",
+    "game",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -71,6 +75,8 @@ TEMPLATES = [
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 SECURE_SSL_REDIRECT = True
+
+AUTH_USER_MODEL = "player.Player"
 
 CONSTANCE_BACKEND = "constance.backends.database.DatabaseBackend"
 CONSTANCE_CONFIG = {}
