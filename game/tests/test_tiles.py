@@ -5,8 +5,7 @@ from django.test import TestCase
 from game.models.board import Board
 from game.models.figure import Figure
 from game.models.game import Game
-from game.models.tile import (ChancelleryTile, ChanceTile, ColoredTile,
-                              SimpleTile)
+from game.models.tile import ChancelleryTile, ChanceTile, ColoredTile, SimpleTile
 from game.models.tile_group import TileGroup
 from game.tests.fixtures import create_simple_game
 
