@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     "player",
     "broker",
     "game",
+    "api",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
