@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext as _
+
 from game.models.game import Game
 
 

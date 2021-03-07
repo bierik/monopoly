@@ -1,7 +1,8 @@
+from django.db import models
 from django.utils.translation import gettext as _
 from polymorphic.models import PolymorphicModel
+
 from game.models.board import Board
-from django.db import models
 
 
 class ActionCard(PolymorphicModel):

@@ -1,13 +1,14 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
-from game.models.tile import Tile
-from game.models.figure import Figure
-from game.tests.fixtures import create_simple_game
-from game.models.game import Game
-from game.models.board import Board
-from game.models.tile_group import TileGroup
 
+from game.models.board import Board
+from game.models.figure import Figure
+from game.models.game import Game
+from game.models.tile import (ChancelleryTile, ChanceTile, ColoredTile,
+                              SimpleTile)
+from game.models.tile_group import TileGroup
+from game.tests.fixtures import create_simple_game
 
 Player = get_user_model()
 
@@ -17,19 +18,28 @@ class ManagesTiles(TestCase):
         game = Game.objects.create()
         board = Board.objects.create(game=game)
         tile_group = TileGroup.objects.create(board=board)
-        Tile.objects.create(tile_group=tile_group, is_corner=True)
-        Tile.objects.create(tile_group=tile_group, is_corner=True)
-        Tile.objects.create(tile_group=tile_group, is_corner=True)
-        Tile.objects.create(tile_group=tile_group, is_corner=True)
-        self.assertRaises(ValidationError, lambda: Tile.objects.create(tile_group=tile_group, is_corner=True))
+        SimpleTile.objects.create(tile_group=tile_group, is_corner=True)
+        SimpleTile.objects.create(tile_group=tile_group, is_corner=True)
+        SimpleTile.objects.create(tile_group=tile_group, is_corner=True)
+        SimpleTile.objects.create(tile_group=tile_group, is_corner=True)
+        self.assertRaises(
+            ValidationError, lambda: SimpleTile.objects.create(tile_group=tile_group, is_corner=True)
+        )
 
     def test_orders_tiles_on_the_board(self):
-        game = create_simple_game()
-        neuenburg, aarau = game["tiles"]
+        game = Game.objects.create()
+        board = Board.objects.create(game=game)
+        tile_group_red = TileGroup.objects.create(board=board)
+        tile_group_yellow = TileGroup.objects.create(board=board)
+
+        SimpleTile.objects.create(tile_group=tile_group_red, order=1)
+        SimpleTile.objects.create(tile_group=tile_group_red, order=3)
+        SimpleTile.objects.create(tile_group=tile_group_yellow, order=4)
+        SimpleTile.objects.create(tile_group=tile_group_red, order=2)
 
         self.assertEqual(
-            [neuenburg.title, aarau.title],
-            list(Tile.get_ordering_queryset(Tile).values_list("title", flat=True)),
+            [1, 2, 3, 4],
+            list(SimpleTile.objects.order_by("order").values_list("order", flat=True)),
         )
 
     def test_places_figures_on_tiles(self):
@@ -61,3 +71,24 @@ class ManagesTiles(TestCase):
         car.move_to(neuenburg)
         self.assertEqual(list(neuenburg.figures.all()), [car])
         self.assertEqual(list(aarau.figures.all()), [horse, cat])
+
+    def test_tile_types_model(self):
+        game = Game.objects.create()
+        board = Board.objects.create(game=game)
+
+        chance_tile_group = TileGroup.objects.create(board=board)
+        ChanceTile.objects.create(tile_group=chance_tile_group)
+        self.assertRaises(
+            ValidationError, lambda: ChancelleryTile.objects.create(tile_group=chance_tile_group)
+        )
+
+        simple_tile_group = TileGroup.objects.create(board=board)
+        SimpleTile.objects.create(tile_group=simple_tile_group)
+        self.assertRaises(
+            ValidationError, lambda: ChancelleryTile.objects.create(tile_group=simple_tile_group)
+        )
+        self.assertRaises(ValidationError, lambda: ColoredTile.objects.create(tile_group=simple_tile_group))
+
+        colored_tile_group = TileGroup.objects.create(board=board)
+        ColoredTile.objects.create(tile_group=colored_tile_group)
+        self.assertRaises(ValidationError, lambda: SimpleTile.objects.create(tile_group=colored_tile_group))

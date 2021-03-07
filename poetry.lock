@@ -81,6 +81,14 @@ argon2 = ["argon2-cffi (>=16.1.0)"]
 bcrypt = ["bcrypt"]
 
 [[package]]
+name = "django-colorfield"
+version = "0.4.1"
+description = "simple color field for your models with a nice color-picker in the admin-interface."
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "django-constance"
 version = "2.8.0"
 description = "Django live settings with pluggable backends, including Redis."
@@ -319,7 +327,7 @@ brotli = ["brotli"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "f155d77492c6035280bde27edce3354939cecca39d3b8eb33d4820d92ca134cf"
+content-hash = "540a984a6fe6f45b06e0af8a4b561c493d745adaa9cde7a22330cc7ed1276491"
 
 [metadata.files]
 appdirs = [
@@ -378,6 +386,10 @@ dj-database-url = [
 django = [
     {file = "Django-3.1.6-py3-none-any.whl", hash = "sha256:169e2e7b4839a7910b393eec127fd7cbae62e80fa55f89c6510426abf673fe5f"},
     {file = "Django-3.1.6.tar.gz", hash = "sha256:c6c0462b8b361f8691171af1fb87eceb4442da28477e12200c40420176206ba7"},
+]
+django-colorfield = [
+    {file = "django-colorfield-0.4.1.tar.gz", hash = "sha256:63a542c417b72d0dac898a0f61a2a00aed3c9aabc2f5057c926efccf421f7887"},
+    {file = "django_colorfield-0.4.1-py3-none-any.whl", hash = "sha256:e38f8b9dabbab48a6dab3d1eb5bd802decb92970d56a28128c9a70cdbf383e30"},
 ]
 django-constance = [
     {file = "django-constance-2.8.0.tar.gz", hash = "sha256:0a492454acc78799ce7b9f7a28a00c53427d513f34f8bf6fdc90a46d8864b2af"},

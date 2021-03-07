@@ -1,9 +1,10 @@
 from django.contrib.auth import get_user_model
-from game.models.game import Game
+
 from game.models.board import Board
-from game.models.tile_group import TileGroup
-from game.models.tile import Tile
 from game.models.figure import Figure
+from game.models.game import Game
+from game.models.tile import Tile
+from game.models.tile_group import TileGroup
 
 Player = get_user_model()
 

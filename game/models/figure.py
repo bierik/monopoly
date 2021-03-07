@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils.translation import gettext as _
+
 from game.models.tile import Tile
 
 Player = get_user_model()
