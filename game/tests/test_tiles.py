@@ -1,14 +1,28 @@
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 from game.models.tile import Tile
 from game.models.figure import Figure
 from game.tests.fixtures import create_simple_game
+from game.models.game import Game
+from game.models.board import Board
+from game.models.tile_group import TileGroup
 
 
 Player = get_user_model()
 
 
 class ManagesTiles(TestCase):
+    def test_validates_corner_tiles(self):
+        game = Game.objects.create()
+        board = Board.objects.create(game=game)
+        tile_group = TileGroup.objects.create(board=board)
+        Tile.objects.create(tile_group=tile_group, is_corner=True)
+        Tile.objects.create(tile_group=tile_group, is_corner=True)
+        Tile.objects.create(tile_group=tile_group, is_corner=True)
+        Tile.objects.create(tile_group=tile_group, is_corner=True)
+        self.assertRaises(ValidationError, lambda: Tile.objects.create(tile_group=tile_group, is_corner=True))
+
     def test_orders_tiles_on_the_board(self):
         game = create_simple_game()
         neuenburg, aarau = game["tiles"]
