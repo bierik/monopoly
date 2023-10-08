@@ -1,0 +1,75 @@
+services:
+  ingress:
+    container_name: ingress
+    build:
+      context: ingress
+      dockerfile: Dockerfile
+    ports:
+      - 5000:80
+
+  mosquitto:
+    container_name: mosquitto
+    image: eclipse-mosquitto:2.0.18
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+
+  board:
+    container_name: board
+    build:
+      context: board
+      dockerfile: Dockerfile
+    volumes:
+      - ./board:/app
+      - /app/node_modules
+    depends_on:
+      - mosquitto
+
+  gamemaster:
+    container_name: gamemaster
+    build:
+      context: gamemaster
+      dockerfile: Dockerfile
+    volumes:
+      - ./gamemaster:/app
+    environment:
+      DJANGO_DATABASE_PASSWORD: postgres
+      DJANGO_DATABASE_HOST: db
+      DJANGO_DATABASE_USER: postgres
+      PARTICIPATIONS: 2
+    depends_on:
+      - mosquitto
+      - db
+    stdin_open: true
+    tty: true
+
+  player:
+    container_name: player
+    build:
+      context: player
+      dockerfile: Dockerfile
+    volumes:
+      - ./player:/app
+      - /app/node_modules
+    depends_on:
+      - mosquitto
+
+  db:
+    container_name: db
+    image: postgres:16.1-alpine3.18
+    volumes:
+      - ./var/data/db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+
+  test-db:
+    container_name: test-db
+    image: postgres:16.1-alpine3.18
+    ports:
+      - 20000:5432
+    command: postgres --fsync=off --synchronous-commit=off --full-page-writes=off
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres

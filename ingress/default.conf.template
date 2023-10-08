@@ -1,0 +1,83 @@
+upstream gamemaster {
+    server gamemaster:8000;
+}
+upstream player {
+    server player:3000;
+}
+upstream board {
+    server board:3000;
+}
+
+server {
+    listen       80;
+    listen  [::]:80;
+    server_name  localhost;
+    charset utf-8;
+    server_tokens off;
+    client_max_body_size 25M;
+
+    location ~* ^/(api|media|static)(/.*)?$ {
+        proxy_pass http://gamemaster/gamemaster/$1$2;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $http_host;
+        proxy_redirect off;
+        client_max_body_size 25M;
+    }
+
+    location ~* ^/player/_nuxt/hmr($|/) {
+        proxy_pass http://player;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    location ~* ^/player(/.*)?$ {
+        proxy_pass http://player/player$1;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $http_host;
+        proxy_redirect off;
+        client_max_body_size 25M;
+    }
+
+    location ~* ^/board/_nuxt/hmr($|/) {
+        proxy_pass http://board;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    location ~* ^/board(/.*)?$ {
+        proxy_pass http://board/board$1;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $http_host;
+        proxy_redirect off;
+        client_max_body_size 25M;
+    }
+
+    location ~* ^/gamemaster(/.*)?$ {
+        proxy_pass http://gamemaster/gamemaster$1;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $http_host;
+        proxy_redirect off;
+        client_max_body_size 25M;
+    }
+
+    location ~* ^/mqtt($|/) {
+        proxy_pass http://mosquitto:9001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    # redirect server error pages to the static page /50x.html
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   /usr/share/nginx/html;
+    }
+}

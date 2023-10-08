@@ -1,0 +1,50 @@
+[tool.poetry]
+name = "gamemaster"
+version = "0.1.0"
+description = ""
+authors = ["Kevin Bieri <bierike@gmail.com>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.13"
+paho-mqtt = "^2.1.0"
+psycopg2 = "^2.9.9"
+django = "^5.0.6"
+django-extensions = "^3.2.3"
+djangorestframework = "^3.14.0"
+pydash = "^8.0.2"
+drf-standardized-errors = "^0.14.0"
+django-ordered-model = "^3.7.4"
+pygltflib = "^1.16.1"
+pytest-django = "^4.7.0"
+django-configurations = "^2.5"
+python-statemachine = "^2.3.4"
+
+
+[tool.poetry.group.dev.dependencies]
+uvicorn = "^0.30.3"
+pytest-django = "^4.7.0"
+ruff = "^0.5.4"
+pytest-playwright = "^0.5.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "settings"
+DJANGO_CONFIGURATION = "Testing"
+python_files = "tests.py test_*.py *_tests.py"
+addopts = "--nomigrations"
+
+[tool.ruff]
+line-length = 125
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = ["D", "ANN", "PT", "ARG001", "ARG002", "RUF012", "ISC", "COM"]
+
+[tool.ruff.lint.per-file-ignores]
+"core/migrations/*" = ["E501"]
+"core/**/test*.py" = ["S107", "S106", "S105", "S311"]

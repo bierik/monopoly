@@ -1,0 +1,44 @@
+{
+  "name": "nuxt-app",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "lint": "pnpm run lint:eslint && yarn lint:prettier",
+    "lint:eslint": "eslint .",
+    "lint:prettier": "prettier . --check",
+    "lintfix": "eslint . --fix && prettier --write --list-different ."
+  },
+  "prettier": {
+    "trailingComma": "all"
+  },
+  "devDependencies": {
+    "@nuxt/devtools": "^1.3.9",
+    "@nuxt/eslint": "^0.3.13",
+    "@nuxt/icon": "^1.3.1",
+    "@nuxtjs/tailwindcss": "^6.12.1",
+    "daisyui": "^4.12.10",
+    "eslint": "^9.7.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "eslint-plugin-tailwindcss": "^3.17.4",
+    "nuxt": "^3.12.4",
+    "prettier": "^3.3.3",
+    "vitest": "^2.0.3",
+    "vue": "^3.4.33",
+    "vue-router": "^4.4.0"
+  },
+  "dependencies": {
+    "@vueuse/core": "^10.11.0",
+    "graphlib": "^2.1.8",
+    "lodash-es": "^4.17.21",
+    "mqtt": "^5.8.1",
+    "qrcode.vue": "^3.4.1",
+    "three": "^0.166.1",
+    "yuka": "^0.7.8"
+  }
+}
