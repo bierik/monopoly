@@ -1,0 +1,52 @@
+version: "3"
+
+services:
+  mosquitto:
+    container_name: mosquitto
+    image: eclipse-mosquitto:2.0.18
+    volumes:
+      - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    ports:
+      - 5000:1883 # mqtt
+      - 5001:9001 # websocket
+
+  board:
+    container_name: board
+    build:
+      context: board
+      dockerfile: Dockerfile
+    volumes:
+      - ./board:/app
+      - /app/node_modules
+    ports:
+      - 5003:5173
+    depends_on:
+      - mosquitto
+
+  api:
+    container_name: api
+    build:
+      context: api
+      dockerfile: Dockerfile
+    volumes:
+      - ./api:/app
+    ports:
+      - 5002:8000
+    environment:
+      DJANGO_DATABASE_PASSWORD: postgres
+      DJANGO_DATABASE_HOST: db
+      DJANGO_DATABASE_USER: postgres
+    depends_on:
+      - mosquitto
+
+  db:
+    container_name: db
+    image: postgres:16.1-alpine3.18
+    ports:
+      - 5004:5432
+    volumes:
+      - ./var/data/db:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres

@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "api"
+version = "0.1.0"
+description = ""
+authors = ["Kevin Bieri <bierike@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+paho-mqtt = "^1.6.1"
+psycopg2 = "^2.9.9"
+django = "^4.2.7"
+django-extensions = "^3.2.3"
+djangorestframework = "^3.14.0"
+pydash = "^7.0.6"
+drf-standardized-errors = "^0.12.6"
+django-ordered-model = "^3.7.4"
+
+
+[tool.poetry.group.dev.dependencies]
+uvicorn = "^0.24.0.post1"
+pytest-django = "^4.7.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

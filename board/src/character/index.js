@@ -1,80 +1,132 @@
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import * as THREE from "three";
-import gsap from "gsap";
-import * as CANNON from "cannon-es";
-import { threeToCannon, ShapeType } from "three-to-cannon";
+import * as THREE from 'three'
+import * as YUKA from 'yuka'
+import { modelForName } from '@/models'
+import { actionsFromMixer } from '@/character/animations'
+import { STATES, IdleState, WalkState, RunState } from '@/character/states'
 
-const gltfLoader = new GLTFLoader();
-
-function pathForCharacterName(name) {
-  return `/src/character/${name}.gltf`;
+class CharacterStateMachine extends YUKA.StateMachine {
+  constructor (owner) {
+    super(owner)
+    this.add(STATES.IDLE, new IdleState())
+    this.add(STATES.WALK, new WalkState())
+    this.add(STATES.RUN, new RunState())
+    this.changeTo(STATES.IDLE)
+  }
 }
 
-export default class Character {
-  constructor(model, animations, scale = 1) {
-    this.scale = scale;
-    this.model = model;
-    this.model.scale.set(scale, scale, scale);
-    this.animations = animations;
-    this.mixer = new THREE.AnimationMixer(this.model);
-    this.model.updateWorldMatrix(false, true);
-    this.animate("Idle");
-    this.body = new CANNON.Body({
-      mass: 0.001,
-    });
-    this.body.addShape(
-      new CANNON.Box(new THREE.Vector3(0.5, 1.6, 0.5).multiplyScalar(scale)),
-      new THREE.Vector3(0, 1.6, 0).multiplyScalar(scale),
-    );
+class CharacterEventDispatcher extends YUKA.EventDispatcher {
+  constructor (owner) {
+    super()
+    this.owner = owner
   }
 
-  getSize() {
-    const box = new THREE.Box3().setFromObject(this.model);
-    const size = new THREE.Vector3();
-    box.getSize(size);
-    return size;
+  arrived () {
+    this.dispatchEvent({ type: 'arrived', owner: this.owner })
+  }
+}
+
+export default class Character extends YUKA.Vehicle {
+  constructor ({ model, scale = 1, board, target = 'start' }) {
+    super()
+    this.scale = new YUKA.Vector3(scale, scale, scale)
+    this.model = model
+    this.board = board
+    this.eventDispatcher = new CharacterEventDispatcher(this)
+    this.standsOn = null
+    this.seekTo = null
+    this.model.matrixAutoUpdate = false
+    this.loadActions(['Idle', 'Walk', 'Run'])
+    this.maxSpeed = 10
+    this.boundingRadius = 1.5
+    this.placeAt(target)
+    this.stateMachine = new CharacterStateMachine(this)
+    this.setRenderComponent(this.model, () => {
+      this.model.matrix.copy(this.worldMatrix)
+    })
   }
 
-  animate(name) {
-    this.mixer.stopAllAction();
-    const clip = THREE.AnimationClip.findByName(this.animations, name);
-    const action = this.mixer.clipAction(clip);
-    action.play();
+  loadActions (actions = []) {
+    this.mixer = new THREE.AnimationMixer(this.model)
+    this.actions = actionsFromMixer(this.mixer, actions)
   }
 
-  async goTo(target, animate = false) {
-    const targetPosition = target.position.clone();
-    if (animate) {
-      this.animate("Run");
-      return new Promise((resolve) => {
-        gsap.to(this.body.position, {
-          x: targetPosition.x,
-          y: targetPosition.y,
-          z: targetPosition.z,
-          ease: "none",
-          duration: 8,
-          onComplete: () => {
-            this.animate("Idle");
-            resolve();
-          },
-        });
-      });
-    } else {
-      this.body.position.copy(targetPosition);
-      return Promise.resolve();
+  update (delta) {
+    super.update(delta)
+    this.mixer.update(delta)
+    this.stateMachine.update()
+    this.updateArrive()
+  }
+
+  pathTo (target) {
+    let current = target
+    const waypoints = []
+    const path = new YUKA.Path()
+    do {
+      if (this.seekTo.isEqual(current)) {
+        const freeSpot = current.occupySpot(this)
+        waypoints.push(new YUKA.Vector3(freeSpot.x, freeSpot.y, freeSpot.z))
+      } else {
+        waypoints.push(current.toYUKAVector())
+      }
+      current = current.parentTile
+    } while (!current.isEqual(this.standsOn))
+    waypoints.reverse().forEach((waypoint) => path.add(waypoint))
+    return path
+  }
+
+  applyTargetSteering (target) {
+    this.followPathBehavior = new YUKA.FollowPathBehavior(
+      this.pathTo(target),
+      10
+    )
+    this.steering.add(this.followPathBehavior)
+  }
+
+  async goTo (target) {
+    if (this.standsOn) {
+      this.standsOn.freeSpot(this)
+    }
+    const targetTile = this.board.tileForName(target)
+    this.seekTo = targetTile
+    this.applyTargetSteering(targetTile)
+  }
+
+  isOnTheWay () {
+    return !this.standsOn.isEqual(this.seekTo)
+  }
+
+  arrive () {
+    this.standsOn = this.seekTo
+    this.steering.remove(this.followPathBehavior)
+    this.velocity.set(0, 0, 0)
+    this.eventDispatcher.arrived()
+  }
+
+  updateArrive () {
+    if (this.isOnTheWay()) {
+      const distanceToSeekTo = this.seekTo
+        .getSpotForCharacter(this)
+        .distanceTo(this.position)
+      if (distanceToSeekTo <= 0.3) {
+        this.arrive()
+      }
     }
   }
 
-  static async forName(name, scale = 1) {
-    return new Promise((resolve, reject) => {
-      gltfLoader.load(
-        pathForCharacterName(name),
-        (gltf) => {
-          resolve(new Character(gltf.scene, gltf.animations, scale));
-        },
-        null,
-        reject,
-      );
-    });
+  placeAt (target) {
+    if (this.standsOn) {
+      this.standsOn.freeSpot(this)
+    }
+    const tile = this.board.tileForName(target)
+    this.standsOn = tile
+    this.seekTo = tile
+    const freeSpot = tile.occupySpot(this)
+    this.position.copy(freeSpot)
+  }
+
+  static async forName ({ name, scale = 1, board, target }) {
+    const { scene: model, animations } = await modelForName(name)
+    model.animations = animations
+    return new Character({ model, scale, board, target })
   }
 }
