@@ -5,7 +5,7 @@ import { actionsFromMixer } from '@/character/animations'
 import { STATES, IdleState, WalkState, RunState } from '@/character/states'
 
 class CharacterStateMachine extends YUKA.StateMachine {
-  constructor (owner) {
+  constructor(owner) {
     super(owner)
     this.add(STATES.IDLE, new IdleState())
     this.add(STATES.WALK, new WalkState())
@@ -15,18 +15,18 @@ class CharacterStateMachine extends YUKA.StateMachine {
 }
 
 class CharacterEventDispatcher extends YUKA.EventDispatcher {
-  constructor (owner) {
+  constructor(owner) {
     super()
     this.owner = owner
   }
 
-  arrived () {
+  arrived() {
     this.dispatchEvent({ type: 'arrived', owner: this.owner })
   }
 }
 
 export default class Character extends YUKA.Vehicle {
-  constructor ({ model, scale = 1, board, target = 'start' }) {
+  constructor({ model, scale = 1, board, target = 'start' }) {
     super()
     this.scale = new YUKA.Vector3(scale, scale, scale)
     this.model = model
@@ -37,7 +37,6 @@ export default class Character extends YUKA.Vehicle {
     this.model.matrixAutoUpdate = false
     this.loadActions(['Idle', 'Walk', 'Run'])
     this.maxSpeed = 10
-    this.boundingRadius = 1.5
     this.placeAt(target)
     this.stateMachine = new CharacterStateMachine(this)
     this.setRenderComponent(this.model, () => {
@@ -45,44 +44,35 @@ export default class Character extends YUKA.Vehicle {
     })
   }
 
-  loadActions (actions = []) {
+  loadActions(actions = []) {
     this.mixer = new THREE.AnimationMixer(this.model)
     this.actions = actionsFromMixer(this.mixer, actions)
   }
 
-  update (delta) {
+  update(delta) {
     super.update(delta)
     this.mixer.update(delta)
     this.stateMachine.update()
     this.updateArrive()
   }
 
-  pathTo (target) {
-    let current = target
-    const waypoints = []
-    const path = new YUKA.Path()
-    do {
-      if (this.seekTo.isEqual(current)) {
-        const freeSpot = current.occupySpot(this)
-        waypoints.push(new YUKA.Vector3(freeSpot.x, freeSpot.y, freeSpot.z))
-      } else {
-        waypoints.push(current.toYUKAVector())
-      }
-      current = current.parentTile
-    } while (!current.isEqual(this.standsOn))
-    waypoints.reverse().forEach((waypoint) => path.add(waypoint))
-    return path
+  pathTo(target) {
+    const path = this.board.graph.buildPath(this.standsOn.name, target.name)
+    const yukaPath = new YUKA.Path()
+    path.forEach((node) => {
+      yukaPath.add(this.board.tileForName(node).toYUKAVector())
+    })
+    const freeTargetSpot = target.occupySpot(this)
+    yukaPath.add(new YUKA.Vector3(freeTargetSpot.x, freeTargetSpot.y, freeTargetSpot.z))
+    return yukaPath
   }
 
-  applyTargetSteering (target) {
-    this.followPathBehavior = new YUKA.FollowPathBehavior(
-      this.pathTo(target),
-      10
-    )
+  applyTargetSteering(target) {
+    this.followPathBehavior = new YUKA.FollowPathBehavior(this.pathTo(target), 10)
     this.steering.add(this.followPathBehavior)
   }
 
-  async goTo (target) {
+  async goTo(target) {
     if (this.standsOn) {
       this.standsOn.freeSpot(this)
     }
@@ -91,29 +81,27 @@ export default class Character extends YUKA.Vehicle {
     this.applyTargetSteering(targetTile)
   }
 
-  isOnTheWay () {
+  isOnTheWay() {
     return !this.standsOn.isEqual(this.seekTo)
   }
 
-  arrive () {
+  arrive() {
     this.standsOn = this.seekTo
     this.steering.remove(this.followPathBehavior)
     this.velocity.set(0, 0, 0)
     this.eventDispatcher.arrived()
   }
 
-  updateArrive () {
+  updateArrive() {
     if (this.isOnTheWay()) {
-      const distanceToSeekTo = this.seekTo
-        .getSpotForCharacter(this)
-        .distanceTo(this.position)
+      const distanceToSeekTo = this.seekTo.getSpotForCharacter(this).distanceTo(this.position)
       if (distanceToSeekTo <= 0.3) {
         this.arrive()
       }
     }
   }
 
-  placeAt (target) {
+  placeAt(target) {
     if (this.standsOn) {
       this.standsOn.freeSpot(this)
     }
@@ -124,7 +112,7 @@ export default class Character extends YUKA.Vehicle {
     this.position.copy(freeSpot)
   }
 
-  static async forName ({ name, scale = 1, board, target }) {
+  static async forName({ name, scale = 1, board, target }) {
     const { scene: model, animations } = await modelForName(name)
     model.animations = animations
     return new Character({ model, scale, board, target })

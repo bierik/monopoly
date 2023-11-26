@@ -1,8 +1,10 @@
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
+from core.board.registry import board_registry
 from core.game.models import Game
 from core.game.serializers import (
     CreateGameSerializer,
@@ -30,3 +32,8 @@ class GameView(GenericViewSet):
         return Response(
             data=GameDetailSerializer(game).data, status=status.HTTP_201_CREATED
         )
+
+
+class BoardExportView(APIView):
+    def get(self, request, identifier, format=None):
+        return Response(board_registry.board_for_identifier(identifier).to_json())

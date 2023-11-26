@@ -1,46 +1,18 @@
-from typing import Any
+from functools import cached_property
 
 from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django_extensions.db.models import TimeStampedModel
 from ordered_model.models import OrderedModel
-from rest_framework.exceptions import ValidationError
 
-from core.board_structures import monopoly
-from core.game.turn import MoveForward
-
-
-class AlreadyParticipantException(ValidationError):
-    def __init__(self):
-        super().__init__(
-            detail="Player is already participating",
-            code="player_already_participating",
-        )
-
-
-class JoinStartedGameException(ValidationError):
-    def __init__(self):
-        super().__init__(
-            detail="Game has already started",
-            code="game_has_already_started",
-        )
-
-
-class SameCharacterException(ValidationError):
-    def __init__(self):
-        super().__init__(
-            detail="The characters have to be unique per game",
-            code="unique_character",
-        )
-
-
-class MaxParticipationsExceeded(ValidationError):
-    def __init__(self):
-        super().__init__(
-            detail="The maximum amount of participations is exceeded.",
-            code="max_participations_exeeded",
-        )
+from core.board.registry import board_registry
+from core.game.exceptions import (
+    AlreadyParticipantException,
+    JoinStartedGameException,
+    MaxParticipationsExceeded,
+    SameCharacterException,
+)
 
 
 class GameStatus(models.TextChoices):
@@ -63,9 +35,8 @@ class Character(models.Model):
 
 
 class GameManager(models.Manager):
-    def create(self, **kwargs):
-        kwargs["board"] = Board.create_monopoly_board()
-        return super().create(**kwargs)
+    def owned(self, owner):
+        return self.get_queryset().filter(owner=owner)
 
 
 class Game(TimeStampedModel):
@@ -73,6 +44,8 @@ class Game(TimeStampedModel):
         verbose_name = _("Spiel")
         verbose_name_plural = _("Spiele")
         ordering = ["-created"]
+
+    objects = GameManager()
 
     status = models.CharField(
         choices=GameStatus.choices, default=GameStatus.CREATED, verbose_name=_("Status")
@@ -94,14 +67,7 @@ class Game(TimeStampedModel):
     max_participations = models.IntegerField(
         verbose_name=_("Maximale Anzahl Teilnahmen"), default=4
     )
-    board = models.OneToOneField(
-        "Board",
-        on_delete=models.CASCADE,
-        verbose_name=_("Spielbrett"),
-        related_name="game",
-    )
-
-    objects = GameManager()
+    board_identifier = models.TextField(verbose_name=_("Spielbrett"))
 
     def join(self, player, character, balance=0):
         if self.participations.filter(player=player).exists():
@@ -125,46 +91,16 @@ class Game(TimeStampedModel):
             return self.participations.first().player
         return self.participations.get(player=self.current_turn).next().player
 
+    @cached_property
+    def board(self):
+        return board_registry.board_for_identifier(self.board_identifier)
 
-class Turn(TimeStampedModel):
-    class Meta:
-        verbose_name = _("Spielzug")
-        verbose_name_plural = _("Spielzüge")
+    def give_turn_to(self, player):
+        self.current_turn = player
+        self.save(update_fields=["current_turn"])
 
-    logic = models.TextField(verbose_name=_("Logik"))
-    logic_params = models.JSONField(verbose_name=_("Logikparameter"))
-    participation = models.ForeignKey(
-        "Participation",
-        on_delete=models.CASCADE,
-        verbose_name=_("Teilnahme"),
-        related_name="turns",
-    )
-
-
-class BoardManager(models.Manager):
-    def create(self, **kwargs):
-        try:
-            return self.get(identifier=kwargs.get("identifier"))
-        except Board.DoesNotExist:
-            return super().create(**kwargs)
-
-
-class Board(models.Model):
-    class Meta:
-        verbose_name = _("Spielbrett")
-        verbose_name_plural = _("Spielbretter")
-
-    name = models.CharField(verbose_name=_("Name"))
-    identifier = models.CharField(verbose_name=_("Identifier"))
-    structure = models.JSONField(verbose_name=_("Aufbau"))
-
-    objects = BoardManager()
-
-    @classmethod
-    def create_monopoly_board(cls):
-        return cls.objects.create(
-            name="Monopoly", structure=monopoly, identifier="monopoly"
-        )
+    def hand_over_turn(self):
+        self.give_turn_to(self.next_turn)
 
 
 class Participation(OrderedModel):
@@ -207,11 +143,10 @@ class Participation(OrderedModel):
         prev = super().previous()
         return prev if prev else self.__class__.objects.last()
 
-    def move_forward(self, steps):
-        turn = Turn.objects.create(
-            logic=MoveForward, logic_params={"steps": steps}, participation=self
-        )
-        turn.run()
+    @property
+    def is_players_turn(self):
+        return self.game.current_turn == self.player
 
-    def make_turn(self, turn):
-        turn.run(self)
+    def move(self, steps):
+        self.current_tile = self.game.board.successor_of(self.current_tile, steps)
+        self.save(update_fields=["current_tile"])

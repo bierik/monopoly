@@ -5,7 +5,7 @@
 import * as THREE from 'three'
 import { onMounted, watch, ref } from 'vue'
 import Board from '@/board'
-import { useWindowSize } from '@vueuse/core'
+import { useWindowSize, useFetch } from '@vueuse/core'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import * as YUKA from 'yuka'
 import mqtt from 'mqtt'
@@ -40,36 +40,24 @@ onMounted(async () => {
   const controls = new OrbitControls(camera, canvas.value)
   controls.update()
 
-  const board = new Board(scene)
+  const { data: nodeLinkGraph } = await useFetch('http://localhost:5002/api/board/monopoly/').get().json()
+
+  const board = Board.fromNodeLinkGraph(nodeLinkGraph.value, scene)
   scene.add(board.model)
 
-  const chars = await Promise.all([
-    board.addCharacter({
-      name: 'casual_male',
-    }),
-    board.addCharacter({
-      name: 'casual_male',
-    }),
-    board.addCharacter({
-      name: 'casual_male',
-    }),
-    board.addCharacter({
-      name: 'casual_male',
-    }),
-  ])
+  const casualMale = await board.addCharacter({ name: 'casual_male' })
+  // casualMale.goTo('start')
 
-  chars.forEach((c) => c.goTo('jail'))
-
-  const client = mqtt.connect('mqtt://localhost:5001')
-  client.on('connect', () => {
-    client.subscribe('bla', (err) => {
-      console.log(err)
-    })
-  })
-  client.on('message', (topic, message) => {
-    console.log(topic)
-    console.log(message.toString())
-  })
+  // const client = mqtt.connect('mqtt://localhost:5001')
+  // client.on('connect', () => {
+  //   client.subscribe('bla', (err) => {
+  //     console.log(err)
+  //   })
+  // })
+  // client.on('message', (topic, message) => {
+  //   console.log(topic)
+  //   console.log(message.toString())
+  // })
 
   const clock = new YUKA.Time()
   renderer.setAnimationLoop(() => {

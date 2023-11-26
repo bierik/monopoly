@@ -11,10 +11,6 @@ until psql -h $DJANGO_DATABASE_HOST -U $DJANGO_DATABASE_USER -w -c '\l'; do
 done
 
 python manage.py migrate --noinput
-{
-    DJANGO_SUPERUSER_PASSWORD=admin python manage.py createsuperuser --username=admin --email=admin@example.org --no-input
-} || {
-    echo "Adminuser already exists"
-}
+DJANGO_SUPERUSER_PASSWORD=admin python manage.py createsuperuser --username=admin --email=admin@example.org --no-input 1> /dev/null 2> /dev/null || true
 
 exec "$@"

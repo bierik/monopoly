@@ -23,13 +23,13 @@ services:
     depends_on:
       - mosquitto
 
-  api:
-    container_name: api
+  gamemaster:
+    container_name: gamemaster
     build:
-      context: api
+      context: gamemaster
       dockerfile: Dockerfile
     volumes:
-      - ./api:/app
+      - ./gamemaster:/app
     ports:
       - 5002:8000
     environment:

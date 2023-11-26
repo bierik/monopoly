@@ -1,16 +1,20 @@
+import random
+
+import pydash
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
+from statemachine.exceptions import TransitionNotAllowed
 
 from core.game.models import (
-    Board,
     Character,
     Game,
     GameStatus,
     MaxParticipationsExceeded,
     Participation,
 )
+from core.game.state_machine import GameMachine
 from core.testutils import create_player_client
 
 User = get_user_model()
@@ -228,28 +232,125 @@ class GameTestCase(APITestCase):
         self.assertEqual(None, game.current_turn)
         self.assertEqual(hans, game.next_turn)
 
-        game.current_turn = peter
-        game.save(update_fields=["current_turn"])
-
+        game.give_turn_to(peter)
         self.assertEqual(peter, game.current_turn)
         self.assertEqual(urs, game.next_turn)
 
-        game.current_turn = bruno
-        game.save(update_fields=["current_turn"])
-
+        game.give_turn_to(bruno)
         self.assertEqual(bruno, game.current_turn)
         self.assertEqual(hans, game.next_turn)
         self.assertEqual(hans, game.next_turn)
 
-    def test_creates_only_one_instance_of_the_same_board(self):
+    def test_determines_current_turn(self):
+        hans = User.objects.create(username="hans")
+        peter = User.objects.create(username="peter")
+        urs = User.objects.create(username="urs")
+        bruno = User.objects.create(username="bruno")
+        game = Game.objects.create(owner=hans)
+
+        participations = [
+            game.join(
+                hans, Character.objects.create(name="Goblin", identifier="goblin")
+            ),
+            game.join(
+                peter, Character.objects.create(name="Pirate", identifier="pirate")
+            ),
+            game.join(urs, Character.objects.create(name="Male", identifier="male")),
+            game.join(
+                bruno, Character.objects.create(name="Robot", identifier="robot")
+            ),
+        ]
+
         self.assertEqual(
-            Board.objects.create(name="board", identifier="board", structure=[]).pk,
-            Board.objects.create(name="board", identifier="board", structure=[]).pk,
+            [False, False, False, False],
+            pydash.pluck(participations, "is_players_turn"),
         )
 
-    def test_moves_some_steps_on_the_board(self):
-        hans = User.objects.create(username="hans")
-        game = Game.objects.create(owner=hans)
-        participation = game.join(
-            hans, Character.objects.create(name="Goblin", identifier="goblin")
+        game.give_turn_to(peter)
+        self.assertEqual(
+            [False, True, False, False],
+            pydash.pluck(participations, "is_players_turn"),
         )
+
+        game.give_turn_to(bruno)
+        self.assertEqual(
+            [False, False, False, True],
+            pydash.pluck(participations, "is_players_turn"),
+        )
+
+
+class GameMaschineTestCase(APITestCase):
+    def setUp(self):
+        super().setUp()
+        self.hans = User.objects.create(username="hans")
+        self.game = Game.objects.create(owner=self.hans, board_identifier="monopoly")
+        self.urs = User.objects.create(username="urs")
+        self.bruno = User.objects.create(username="bruno")
+
+    def test_restricts_turn_to_players_turn(self):
+        hans_machine = GameMachine(
+            self.game.join(
+                self.hans, Character.objects.create(name="Goblin", identifier="goblin")
+            )
+        )
+        bruno_machine = GameMachine(
+            self.game.join(
+                self.bruno, Character.objects.create(name="Pirate", identifier="pirate")
+            )
+        )
+        urs_machine = GameMachine(
+            self.game.join(
+                self.urs, Character.objects.create(name="Male", identifier="male")
+            )
+        )
+
+        machines = [hans_machine, bruno_machine, urs_machine]
+
+        self.assertEqual(
+            ["idle", "idle", "idle"], pydash.pluck(machines, "current_state.id")
+        )
+
+        with self.assertRaises(TransitionNotAllowed):
+            hans_machine.start_turn()
+
+        self.game.give_turn_to(self.hans)
+
+        hans_machine.start_turn()
+        self.assertEqual(
+            ["turn_started", "idle", "idle"], pydash.pluck(machines, "current_state.id")
+        )
+
+    def test_hands_over_turn_to_next_player(self):
+        hans_machine = GameMachine(
+            self.game.join(
+                self.hans, Character.objects.create(name="Goblin", identifier="goblin")
+            )
+        )
+        self.game.join(
+            self.bruno, Character.objects.create(name="Goblin", identifier="goblin")
+        )
+        self.game.give_turn_to(self.hans)
+        hans_machine.start_turn()
+        hans_machine.roll_dice()
+        hans_machine.move()
+        hans_machine.end_turn()
+
+        self.game.refresh_from_db(fields=["current_turn"])
+        self.assertEqual(self.bruno, self.game.current_turn)
+
+    def test_moves_some_steps_on_the_board(self):
+        random.seed(42)
+
+        participation = self.game.join(
+            self.hans, Character.objects.create(name="Goblin", identifier="goblin")
+        )
+        hans_machine = GameMachine(participation)
+        self.game.give_turn_to(self.hans)
+        hans_machine.start_turn()
+        hans_machine.roll_dice()
+
+        self.assertEqual("start", participation.current_tile)
+
+        hans_machine.move()
+        participation.refresh_from_db(fields=["current_tile"])
+        self.assertEqual("chance3", participation.current_tile)
