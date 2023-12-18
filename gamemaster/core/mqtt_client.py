@@ -16,7 +16,8 @@ class MQTTClient:
 
     def connect(self):
         self.client = Client(_create_client_id())
-        self.client.connect(self.host, self.port)
+        self.client.connect_async(self.host, self.port)
+        self.client.loop_start()
 
     def disconnect(self, resoncode=0):
         self.client.disconnect(resoncode)

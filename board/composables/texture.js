@@ -2,11 +2,11 @@ import * as THREE from 'three'
 
 const textureLoader = new THREE.TextureLoader()
 
-function pathForTextureName (name) {
-  return `/src/textures/${name}.png`
+function pathForTextureName(name) {
+  return `/textures/${name}.png`
 }
 
-export function textureForName (name) {
+export default function (name) {
   const textureURL = new URL(pathForTextureName(name), import.meta.url).href
   return textureLoader.load(textureURL)
 }

@@ -5,6 +5,7 @@ from core.game.models import Character, Game
 
 class JoinGameSerializer(serializers.Serializer):
     character = serializers.PrimaryKeyRelatedField(queryset=Character.objects.all())
+    max_participations = serializers.IntegerField(default=4)
 
 
 class CreateGameSerializer(JoinGameSerializer):

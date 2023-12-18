@@ -23,11 +23,3 @@ class SameCharacterException(ValidationError):
             detail="The characters have to be unique per game",
             code="unique_character",
         )
-
-
-class MaxParticipationsExceeded(ValidationError):
-    def __init__(self):
-        super().__init__(
-            detail="The maximum amount of participations is exceeded.",
-            code="max_participations_exeeded",
-        )

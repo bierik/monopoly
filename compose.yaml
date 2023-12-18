@@ -19,7 +19,7 @@ services:
       - ./board:/app
       - /app/node_modules
     ports:
-      - 5003:5173
+      - 5003:3000
     depends_on:
       - mosquitto
 

@@ -1,17 +1,17 @@
 from functools import cached_property
 
-from core.board.registry import board_registry
-from core.game.exceptions import (
-    AlreadyParticipantException,
-    JoinStartedGameException,
-    MaxParticipationsExceeded,
-    SameCharacterException,
-)
 from django.conf import settings
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django_extensions.db.models import TimeStampedModel
 from ordered_model.models import OrderedModel
+
+from core.board.registry import board_registry
+from core.game.exceptions import (
+    AlreadyParticipantException,
+    JoinStartedGameException,
+    SameCharacterException,
+)
 
 
 class GameStatus(models.TextChoices):
@@ -75,8 +75,6 @@ class Game(TimeStampedModel):
             raise JoinStartedGameException()
         if self.participations.filter(character=character).exists():
             raise SameCharacterException()
-        if self.participations.count() == self.max_participations:
-            raise MaxParticipationsExceeded()
         return Participation.objects.create(
             game=self,
             player=player,
@@ -100,6 +98,10 @@ class Game(TimeStampedModel):
 
     def hand_over_turn(self):
         self.give_turn_to(self.next_turn)
+
+    def start(self):
+        self.status = GameStatus.RUNNING
+        self.save(update_fields=["status"])
 
 
 class Participation(OrderedModel):

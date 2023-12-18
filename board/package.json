@@ -1,44 +1,30 @@
 {
-  "name": "board",
+  "name": "nuxt-app",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "test": "vitest"
-  },
-  "dependencies": {
-    "@vueuse/core": "^10.4.1",
-    "@vueuse/integrations": "^10.7.0",
-    "cannon-es": "^0.20.0",
-    "cannon-es-debugger": "^1.0.0",
-    "graphlib": "^2.1.8",
-    "gsap": "^3.12.2",
-    "lodash": "^4.17.21",
-    "mqtt": "^5.2.2",
-    "qrcode.vue": "^3.4.1",
-    "three": "^0.157.0",
-    "universal-cookie": "^6",
-    "vue": "^3.3.4",
-    "vue-router": "4",
-    "yuka": "^0.7.8"
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^4.2.3",
-    "autoprefixer": "^10.4.16",
-    "eslint": "^8.51.0",
-    "eslint-config-prettier": "^9.0.0",
-    "eslint-config-standard": "^17.1.0",
-    "eslint-plugin-import": "^2.25.2",
-    "eslint-plugin-n": "^15.0.0 || ^16.0.0 ",
-    "eslint-plugin-promise": "^6.0.0",
-    "eslint-plugin-tailwindcss": "^3.13.0",
-    "eslint-plugin-vue": "^9.18.1",
-    "postcss": "^8.4.31",
-    "prettier": "^3.0.3",
-    "tailwindcss": "^3.3.3",
-    "vite": "^4.4.5",
-    "vitest": "^0.34.6"
+    "@nuxt/devtools": "latest",
+    "eslint": "^8.56.0",
+    "nuxt": "^3.8.2",
+    "prettier": "^3.1.1",
+    "vitest": "^1.0.4",
+    "vue": "^3.3.12",
+    "vue-router": "^4.2.5"
+  },
+  "dependencies": {
+    "@vueuse/core": "^10.7.0",
+    "graphlib": "^2.1.8",
+    "lodash": "^4.17.21",
+    "mqtt": "^5.3.3",
+    "qrcode.vue": "^3.4.1",
+    "three": "^0.159.0",
+    "yuka": "^0.7.8"
   }
 }

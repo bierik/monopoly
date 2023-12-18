@@ -7,13 +7,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from statemachine.exceptions import TransitionNotAllowed
 
-from core.game.models import (
-    Character,
-    Game,
-    GameStatus,
-    MaxParticipationsExceeded,
-    Participation,
-)
+from core.game.exceptions import JoinStartedGameException
+from core.game.models import Character, Game, GameStatus, Participation
 from core.game.state_machine import GameMachine
 from core.testutils import create_player_client
 
@@ -214,7 +209,7 @@ class GameTestCase(APITestCase):
         game = Game.objects.create(owner=hans, max_participations=2)
         game.join(hans, Character.objects.create(name="Goblin", identifier="goblin"))
         game.join(peter, Character.objects.create(name="Pirate", identifier="pirate"))
-        with self.assertRaises(MaxParticipationsExceeded):
+        with self.assertRaises(JoinStartedGameException):
             game.join(urs, Character.objects.create(name="Male", identifier="male"))
 
     def test_correctly_determines_whose_turn_is_next(self):
@@ -277,6 +272,31 @@ class GameTestCase(APITestCase):
             [False, False, False, True],
             pydash.pluck(participations, "is_players_turn"),
         )
+
+    def test_configure_max_participations(self):
+        hans = User.objects.create(username="hans")
+        character = Character.objects.create(name="Goblin", identifier="goblin")
+
+        hans_client = create_player_client(hans)
+        response = hans_client.post(
+            reverse("game-list"),
+            data={"character": character.pk, "max_participations": 2},
+        )
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertEqual(
+            [2],
+            list(Game.objects.values_list("max_participations", flat=True)),
+        )
+
+    def test_start_a_game_as_soon_as_all_participants_have_joined(self):
+        hans = User.objects.create(username="hans")
+        peter = User.objects.create(username="peter")
+        game = Game.objects.create(owner=hans, max_participations=2)
+        game.join(hans, Character.objects.create(name="Goblin", identifier="goblin"))
+        game.join(peter, Character.objects.create(name="Male", identifier="male"))
+
+        game.refresh_from_db(fields=["status"])
+        self.assertEqual(GameStatus.RUNNING, game.status)
 
 
 class GameMaschineTestCase(APITestCase):

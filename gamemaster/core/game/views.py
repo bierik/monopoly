@@ -30,9 +30,11 @@ class GameView(SerializerActionMixin, GenericViewSet, mixins.RetrieveModelMixin)
     def create(self, request):
         serializer = CreateGameSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        game = Game.objects.create(owner=request.user)
+        game = Game.objects.create(
+            owner=request.user,
+            max_participations=serializer.validated_data["max_participations"],
+        )
         game.join(player=request.user, character=serializer.validated_data["character"])
-        mqtt_client.publish("game/created", {"game_id": game.pk})
         return Response(
             data=GameDetailSerializer(game).data, status=status.HTTP_201_CREATED
         )

@@ -52,17 +52,6 @@ onMounted(async () => {
   const casualMale = await board.addCharacter({ name: 'casual_male' })
   casualMale.goTo('im_gefaengnis_nur_zu_besuch')
 
-  // const client = mqtt.connect('mqtt://localhost:5001')
-  // client.on('connect', () => {
-  //   client.subscribe('bla', (err) => {
-  //     console.log(err)
-  //   })
-  // })
-  // client.on('message', (topic, message) => {
-  //   console.log(topic)
-  //   console.log(message.toString())
-  // })
-
   const clock = new YUKA.Time()
   renderer.setAnimationLoop(() => {
     const delta = clock.update().getDelta()
