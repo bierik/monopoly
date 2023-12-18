@@ -15,16 +15,29 @@ class DeviceTestCase(APITestCase):
         response = client.post(
             reverse("device-register"), headers={"USER_AGENT": "useragent"}
         )
-        self.assertEqual(status.HTTP_204_NO_CONTENT, response.status_code)
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertEqual("useragent", response.json()["user_agent"])
         self.assertEqual(
             ["useragent"], pydash.pluck(Device.objects.all(), "user_agent")
         )
 
-    def test_get_a_device_for_token(self):
+    def test_does_not_register_a_device_twice(self):
         Device.objects.create(
             user_agent="useragent", token="939a9fd3-6b4c-4f64-bce0-c642d292df95"
         )
-        self.assertEqual(
-            "939a9fd3-6b4c-4f64-bce0-c642d292df95",
-            str(Device.objects.for_token("939a9fd3-6b4c-4f64-bce0-c642d292df95").token),
+        client = APIClient()
+        response = client.post(
+            reverse("device-register"),
+            headers={"x-Device-Token": "939a9fd3-6b4c-4f64-bce0-c642d292df95"},
         )
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(
+            "939a9fd3-6b4c-4f64-bce0-c642d292df95", response.json()["token"]
+        )
+        self.assertEqual(
+            ["939a9fd3-6b4c-4f64-bce0-c642d292df95"],
+            list(map(str, Device.objects.values_list("token", flat=True))),
+        )
+
+    def test_rejects_malformat_token(self):
+        pass

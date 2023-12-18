@@ -4,10 +4,19 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from core.device.models import Device
+from core.device.serializers import DeviceDetailSerializer
 
 
 class DeviceViewSet(GenericViewSet):
     @action(methods=["POST"], detail=False)
     def register(self, request):
-        Device.register(request.META.get("HTTP_USER_AGENT", ""))
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        try:
+            device = Device.objects.for_token(request.device_token)
+            return Response(
+                DeviceDetailSerializer(device).data, status=status.HTTP_200_OK
+            )
+        except Device.DoesNotExist:
+            device = Device.register(request.META.get("HTTP_USER_AGENT", ""))
+            return Response(
+                DeviceDetailSerializer(device).data, status=status.HTTP_201_CREATED
+            )

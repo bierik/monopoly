@@ -18,19 +18,18 @@ INSTALLED_APPS = [
     "django_extensions",
     "drf_standardized_errors",
     "ordered_model",
-    "corsheaders",
     "core",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "core.device.token_middleware.DeviceTokenMiddleware",
 ]
 
 ROOT_URLCONF = "urls"
@@ -65,8 +64,12 @@ DATABASES = {
 }
 
 REST_FRAMEWORK = {
-    "EXCEPTION_HANDLER": "drf_standardized_errors.handler.exception_handler"
+    "EXCEPTION_HANDLER": "drf_standardized_errors.handler.exception_handler",
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
+    ],
 }
+
 
 LANGUAGE_CODE = "de-ch"
 TIME_ZONE = "UTC"
@@ -78,7 +81,3 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "core.Player"
-
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5003",
-]

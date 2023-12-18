@@ -17,7 +17,6 @@ drf-standardized-errors = "^0.12.6"
 django-ordered-model = "^3.7.4"
 python-statemachine = "^2.1.2"
 networkx = "^3.2.1"
-django-cors-headers = "^4.3.1"
 
 
 [tool.poetry.group.dev.dependencies]

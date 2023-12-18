@@ -1,11 +1,5 @@
 from functools import cached_property
 
-from django.conf import settings
-from django.db import models
-from django.utils.translation import gettext_lazy as _
-from django_extensions.db.models import TimeStampedModel
-from ordered_model.models import OrderedModel
-
 from core.board.registry import board_registry
 from core.game.exceptions import (
     AlreadyParticipantException,
@@ -13,6 +7,11 @@ from core.game.exceptions import (
     MaxParticipationsExceeded,
     SameCharacterException,
 )
+from django.conf import settings
+from django.db import models
+from django.utils.translation import gettext_lazy as _
+from django_extensions.db.models import TimeStampedModel
+from ordered_model.models import OrderedModel
 
 
 class GameStatus(models.TextChoices):

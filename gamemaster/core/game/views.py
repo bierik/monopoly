@@ -1,20 +1,23 @@
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.viewsets import GenericViewSet
+from rest_framework.viewsets import GenericViewSet, mixins
 
-from core.board.registry import board_registry
 from core.game.models import Game
 from core.game.serializers import (
     CreateGameSerializer,
     GameDetailSerializer,
     JoinGameSerializer,
 )
+from core.mqtt_client import mqtt_client
+from core.views import SerializerActionMixin
 
 
-class GameView(GenericViewSet):
+class GameView(SerializerActionMixin, GenericViewSet, mixins.RetrieveModelMixin):
     queryset = Game.objects.all()
+    serializer_action_classes = {
+        "retrieve": GameDetailSerializer,
+    }
 
     @action(methods=["POST"], detail=True)
     def join(self, request, pk=None):
@@ -29,11 +32,7 @@ class GameView(GenericViewSet):
         serializer.is_valid(raise_exception=True)
         game = Game.objects.create(owner=request.user)
         game.join(player=request.user, character=serializer.validated_data["character"])
+        mqtt_client.publish("game/created", {"game_id": game.pk})
         return Response(
             data=GameDetailSerializer(game).data, status=status.HTTP_201_CREATED
         )
-
-
-class BoardExportView(APIView):
-    def get(self, request, identifier, format=None):
-        return Response(board_registry.board_for_identifier(identifier).to_json())

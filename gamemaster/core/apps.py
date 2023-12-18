@@ -1,6 +1,8 @@
+from django.apps import AppConfig
+
 from core.board.monopoly import monopoly
 from core.board.registry import board_registry
-from django.apps import AppConfig
+from core.mqtt_client import mqtt_client
 
 
 class CoreConfig(AppConfig):
@@ -9,3 +11,4 @@ class CoreConfig(AppConfig):
 
     def ready(self):
         board_registry.register(monopoly, "monopoly")
+        mqtt_client.connect()

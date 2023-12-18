@@ -1,0 +1,1 @@
+<template>bla</template>
