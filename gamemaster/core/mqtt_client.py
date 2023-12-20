@@ -23,7 +23,7 @@ class MQTTClient:
         self.client.disconnect(resoncode)
 
     def publish(self, topic, payload):
-        self.client.publish(topic, json.dumps(payload))
+        self.client.publish(topic, payload=json.dumps(payload), qos=2)
 
 
 mqtt_client = MQTTClient()

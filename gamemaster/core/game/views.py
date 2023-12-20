@@ -35,6 +35,9 @@ class GameView(SerializerActionMixin, GenericViewSet, mixins.RetrieveModelMixin)
             max_participations=serializer.validated_data["max_participations"],
         )
         game.join(player=request.user, character=serializer.validated_data["character"])
+        mqtt_client.publish(
+            f"{request.device.token}/game/created", {"game_id": game.pk}
+        )
         return Response(
             data=GameDetailSerializer(game).data, status=status.HTTP_201_CREATED
         )

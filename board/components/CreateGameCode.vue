@@ -1,5 +1,5 @@
 <template>
-  <QrcodeVue value="https://example.com" />
+  <QrcodeVue :value="createGameURL" />
   {{ createGameURL }}
 </template>
 <script setup>
@@ -9,7 +9,6 @@ import QrcodeVue from 'qrcode.vue'
 
 const router = useRouter()
 const api = useApi()
-const subscribe = useSubscribe()
 const onMessage = useOnMessage()
 const deviceToken = useLocalStorage('deviceToken')
 
@@ -18,8 +17,7 @@ deviceToken.value = get(data, 'value.token', null)
 
 const createGameURL = `http://localhost:5005/create_game/${deviceToken.value}`
 
-await subscribe('game/created')
-onMessage('game/created', ({ game_id: gameId }) => {
+onMessage(`${deviceToken.value}/game/created`, ({ game_id: gameId }) => {
   router.replace({ name: 'lobby-id', params: { id: gameId } })
 })
 </script>

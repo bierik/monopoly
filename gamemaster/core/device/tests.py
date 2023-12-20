@@ -28,7 +28,7 @@ class DeviceTestCase(APITestCase):
         client = APIClient()
         response = client.post(
             reverse("device-register"),
-            headers={"x-Device-Token": "939a9fd3-6b4c-4f64-bce0-c642d292df95"},
+            headers={"X-Device-Token": "939a9fd3-6b4c-4f64-bce0-c642d292df95"},
         )
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(

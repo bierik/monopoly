@@ -10,8 +10,10 @@ from core.board.registry import board_registry
 from core.game.exceptions import (
     AlreadyParticipantException,
     JoinStartedGameException,
+    MaxParticipationsExceeded,
     SameCharacterException,
 )
+from core.mqtt_client import mqtt_client
 
 
 class GameStatus(models.TextChoices):
@@ -69,18 +71,22 @@ class Game(TimeStampedModel):
     board_identifier = models.TextField(verbose_name=_("Spielbrett"))
 
     def join(self, player, character, balance=0):
+        if self.participations.count() == self.max_participations:
+            raise MaxParticipationsExceeded()
         if self.participations.filter(player=player).exists():
             raise AlreadyParticipantException()
         if self.status != GameStatus.CREATED:
             raise JoinStartedGameException()
         if self.participations.filter(character=character).exists():
             raise SameCharacterException()
-        return Participation.objects.create(
+        participation = Participation.objects.create(
             game=self,
             player=player,
             character=character,
             balance=balance,
         )
+        mqtt_client.publish(f"game/{self.pk}/joined", {"game_id": self.pk})
+        return participation
 
     @property
     def next_turn(self):
@@ -102,6 +108,7 @@ class Game(TimeStampedModel):
     def start(self):
         self.status = GameStatus.RUNNING
         self.save(update_fields=["status"])
+        mqtt_client.publish(f"game/{self.pk}/started", {"game_id": self.pk})
 
 
 class Participation(OrderedModel):

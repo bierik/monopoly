@@ -12,5 +12,3 @@ class CoreConfig(AppConfig):
     def ready(self):
         board_registry.register(monopoly, "monopoly")
         mqtt_client.connect()
-
-        import core.game.receviers  # noqa

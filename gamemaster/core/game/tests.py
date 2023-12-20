@@ -1,4 +1,5 @@
 import random
+from unittest import mock
 
 import pydash
 from django.contrib.auth import get_user_model
@@ -7,7 +8,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from statemachine.exceptions import TransitionNotAllowed
 
-from core.game.exceptions import JoinStartedGameException
+from core.device.models import Device
+from core.game.exceptions import JoinStartedGameException, MaxParticipationsExceeded
 from core.game.models import Character, Game, GameStatus, Participation
 from core.game.state_machine import GameMachine
 from core.testutils import create_player_client
@@ -36,12 +38,15 @@ class GameTestCase(APITestCase):
         )
 
     def test_creates_game(self):
+        device = Device.objects.create(user_agent="user_agent")
         character = Character.objects.create(name="Goblin", identifier="goblin")
         player = User.objects.create(username="hans")
         player_client = create_player_client(player)
         self.assertEqual(0, Game.objects.count())
         response = player_client.post(
-            reverse("game-list"), data={"character": character.pk}
+            reverse("game-list"),
+            data={"character": character.pk},
+            headers={"X-Device-Token": device.token},
         )
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertEqual(
@@ -170,12 +175,14 @@ class GameTestCase(APITestCase):
         )
 
     def test_creating_a_game_automatically_joins_the_creator(self):
+        device = Device.objects.create(user_agent="user_agent")
         character = Character.objects.create(name="Goblin", identifier="goblin")
         player = User.objects.create(username="hans")
         player_client = create_player_client(player)
         response = player_client.post(
             reverse("game-list"),
             data={"character": character.pk},
+            headers={"X-Device-Token": device.token},
         )
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertEqual(
@@ -188,12 +195,15 @@ class GameTestCase(APITestCase):
         )
 
     def test_creating_a_game_sets_the_creator_as_the_owner(self):
+        device = Device.objects.create(user_agent="user_agent")
         character = Character.objects.create(name="Goblin", identifier="goblin")
         player = User.objects.create(username="hans")
         player_client = create_player_client(player)
         self.assertEqual(0, Game.objects.count())
         response = player_client.post(
-            reverse("game-list"), data={"character": character.pk}
+            reverse("game-list"),
+            data={"character": character.pk},
+            headers={"X-Device-Token": device.token},
         )
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertEqual(
@@ -209,7 +219,7 @@ class GameTestCase(APITestCase):
         game = Game.objects.create(owner=hans, max_participations=2)
         game.join(hans, Character.objects.create(name="Goblin", identifier="goblin"))
         game.join(peter, Character.objects.create(name="Pirate", identifier="pirate"))
-        with self.assertRaises(JoinStartedGameException):
+        with self.assertRaises(MaxParticipationsExceeded):
             game.join(urs, Character.objects.create(name="Male", identifier="male"))
 
     def test_correctly_determines_whose_turn_is_next(self):
@@ -274,6 +284,7 @@ class GameTestCase(APITestCase):
         )
 
     def test_configure_max_participations(self):
+        device = Device.objects.create(user_agent="user_agent")
         hans = User.objects.create(username="hans")
         character = Character.objects.create(name="Goblin", identifier="goblin")
 
@@ -281,6 +292,7 @@ class GameTestCase(APITestCase):
         response = hans_client.post(
             reverse("game-list"),
             data={"character": character.pk, "max_participations": 2},
+            headers={"X-Device-Token": device.token},
         )
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertEqual(
@@ -288,15 +300,36 @@ class GameTestCase(APITestCase):
             list(Game.objects.values_list("max_participations", flat=True)),
         )
 
-    def test_start_a_game_as_soon_as_all_participants_have_joined(self):
-        hans = User.objects.create(username="hans")
-        peter = User.objects.create(username="peter")
-        game = Game.objects.create(owner=hans, max_participations=2)
-        game.join(hans, Character.objects.create(name="Goblin", identifier="goblin"))
-        game.join(peter, Character.objects.create(name="Male", identifier="male"))
+    @mock.patch("core.mqtt_client.mqtt_client.publish")
+    def test_notifies_when_a_game_has_created_using_the_device_content(
+        self, mqtt_publish
+    ):
+        device = Device.objects.create(user_agent="user_agent")
+        character = Character.objects.create(name="Goblin", identifier="goblin")
+        player = User.objects.create(username="hans")
+        player_client = create_player_client(player)
+        response = player_client.post(
+            reverse("game-list"),
+            data={"character": character.pk},
+            headers={"X-Device-Token": device.token},
+        )
+        mqtt_publish.assert_called_with(
+            f"{device.token}/game/created", {"game_id": response.json()["pk"]}
+        )
 
-        game.refresh_from_db(fields=["status"])
-        self.assertEqual(GameStatus.RUNNING, game.status)
+    @mock.patch("core.mqtt_client.mqtt_client.publish")
+    def test_notifies_when_a_game_receives_a_participation(self, mqtt_publish):
+        hans = User.objects.create(username="hans")
+        game = Game.objects.create(owner=hans)
+        game.join(hans, Character.objects.create(name="Goblin", identifier="goblin"))
+        mqtt_publish.assert_called_with(f"game/{game.pk}/joined", {"game_id": game.pk})
+
+    @mock.patch("core.mqtt_client.mqtt_client.publish")
+    def test_notifies_when_a_game_has_started(self, mqtt_publish):
+        hans = User.objects.create(username="hans")
+        game = Game.objects.create(owner=hans)
+        game.start()
+        mqtt_publish.assert_called_with(f"game/{game.pk}/started", {"game_id": game.pk})
 
 
 class GameMaschineTestCase(APITestCase):

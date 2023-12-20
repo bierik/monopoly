@@ -10,13 +10,11 @@ from core.device.serializers import DeviceDetailSerializer
 class DeviceViewSet(GenericViewSet):
     @action(methods=["POST"], detail=False)
     def register(self, request):
-        try:
-            device = Device.objects.for_token(request.device_token)
-            return Response(
-                DeviceDetailSerializer(device).data, status=status.HTTP_200_OK
-            )
-        except Device.DoesNotExist:
+        if not request.device:
             device = Device.register(request.META.get("HTTP_USER_AGENT", ""))
             return Response(
                 DeviceDetailSerializer(device).data, status=status.HTTP_201_CREATED
             )
+        return Response(
+            DeviceDetailSerializer(request.device).data, status=status.HTTP_200_OK
+        )
