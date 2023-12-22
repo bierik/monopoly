@@ -1,22 +1,12 @@
-import { useLocalStorage, createFetch, useFetch } from '@vueuse/core'
+import { useLocalStorage } from '@vueuse/core'
 
-const { value: deviceToken } = useLocalStorage('deviceToken', null)
+await $fetch('/api/csrf')
 
-const api = createFetch({
-  baseUrl: '/api',
-  options: {
-    async beforeFetch({ options }) {
-      if (deviceToken) {
-        options.headers['X-Device-Token'] = deviceToken
-      }
-      const { value: csrfToken } = useCookie('csrftoken')
-      options.headers['X-CSRFToken'] = csrfToken
-      return {
-        options,
-      }
-    },
-  },
-})
+const headers = {
+  'X-Device-Token': toValue(useLocalStorage('deviceToken', null)),
+  'X-CSRFToken': toValue(useCookie('csrftoken')),
+}
+const api = $fetch.create({ baseURL: '/api', headers })
 
 export default function () {
   return api

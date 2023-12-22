@@ -1,16 +1,16 @@
-from rest_framework import status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet, mixins
-
 from core.game.models import Game
 from core.game.serializers import (
     CreateGameSerializer,
     GameDetailSerializer,
     JoinGameSerializer,
+    ParticipationLobbySerializer,
 )
 from core.mqtt_client import mqtt_client
 from core.views import SerializerActionMixin
+from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet, mixins
 
 
 class GameView(SerializerActionMixin, GenericViewSet, mixins.RetrieveModelMixin):
@@ -27,6 +27,13 @@ class GameView(SerializerActionMixin, GenericViewSet, mixins.RetrieveModelMixin)
         game.join(player=request.user, character=serializer.validated_data["character"])
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @action(methods=["GET"], detail=True)
+    def lobby(self, request, pk=None):
+        game = self.get_object()
+        return Response(
+            ParticipationLobbySerializer(game.participations.all(), many=True).data
+        )
+
     def create(self, request):
         serializer = CreateGameSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -34,7 +41,6 @@ class GameView(SerializerActionMixin, GenericViewSet, mixins.RetrieveModelMixin)
             owner=request.user,
             max_participations=serializer.validated_data["max_participations"],
         )
-        game.join(player=request.user, character=serializer.validated_data["character"])
         mqtt_client.publish(
             f"{request.device.token}/game/created", {"game_id": game.pk}
         )

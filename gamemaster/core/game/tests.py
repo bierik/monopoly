@@ -2,41 +2,21 @@ import random
 from unittest import mock
 
 import pydash
+from core.device.models import Device
+from core.game.exceptions import MaxParticipationsExceeded
+from core.game.models import Character, Game, GameStatus, Participation
+from core.game.state_machine import GameMachine
+from core.testutils import create_player_client
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 from statemachine.exceptions import TransitionNotAllowed
 
-from core.device.models import Device
-from core.game.exceptions import JoinStartedGameException, MaxParticipationsExceeded
-from core.game.models import Character, Game, GameStatus, Participation
-from core.game.state_machine import GameMachine
-from core.testutils import create_player_client
-
 User = get_user_model()
 
 
 class GameTestCase(APITestCase):
-    def test_creating_a_game_requires_character(self):
-        player = User.objects.create(username="hans")
-        player_client = create_player_client(player)
-        response = player_client.post(reverse("game-list"))
-        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
-        self.assertEqual(
-            {
-                "type": "validation_error",
-                "errors": [
-                    {
-                        "attr": "character",
-                        "code": "required",
-                        "detail": "Dieses Feld ist zwingend erforderlich.",
-                    }
-                ],
-            },
-            response.json(),
-        )
-
     def test_creates_game(self):
         device = Device.objects.create(user_agent="user_agent")
         character = Character.objects.create(name="Goblin", identifier="goblin")
@@ -172,26 +152,6 @@ class GameTestCase(APITestCase):
                 ],
             },
             response.json(),
-        )
-
-    def test_creating_a_game_automatically_joins_the_creator(self):
-        device = Device.objects.create(user_agent="user_agent")
-        character = Character.objects.create(name="Goblin", identifier="goblin")
-        player = User.objects.create(username="hans")
-        player_client = create_player_client(player)
-        response = player_client.post(
-            reverse("game-list"),
-            data={"character": character.pk},
-            headers={"X-Device-Token": device.token},
-        )
-        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
-        self.assertEqual(
-            [GameStatus.CREATED],
-            list(Game.objects.values_list("status", flat=True)),
-        )
-        self.assertEqual(
-            [(player.pk, response.json()["pk"])],
-            list(Participation.objects.values_list("player_id", "game_id")),
         )
 
     def test_creating_a_game_sets_the_creator_as_the_owner(self):
@@ -330,6 +290,20 @@ class GameTestCase(APITestCase):
         game = Game.objects.create(owner=hans)
         game.start()
         mqtt_publish.assert_called_with(f"game/{game.pk}/started", {"game_id": game.pk})
+
+    def test_lists_participations_for_a_game_lobby(self):
+        hans = User.objects.create(username="hans")
+        peter = User.objects.create(username="peter")
+        game = Game.objects.create(owner=hans)
+        game.join(hans, Character.objects.create(name="Goblin", identifier="goblin"))
+        game.join(peter, Character.objects.create(name="Male", identifier="male"))
+
+        player_client = create_player_client(hans)
+        response = player_client.get(reverse("game-lobby", kwargs={"pk": game.pk}))
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(
+            ["hans", "peter"], pydash.pluck(response.json(), "player.username")
+        )
 
 
 class GameMaschineTestCase(APITestCase):
