@@ -15,7 +15,24 @@ export const useSubscribe = () => (topic) => {
   return client.subscribeAsync(topic)
 }
 
-export const useOnMessage = () => (topic, callback) => {
+function removeMessageHandler(topic) {
+  topicHandlers.delete(topic)
+}
+
+function addMessageHandler(topic, callback) {
   const handlers = topicHandlers.get(topic) || []
   topicHandlers.set(topic, [...handlers, callback])
+}
+
+export const useOnMessage = () => (topic, callback) => {
+  watch(
+    topic,
+    (newTopic, oldTopic) => {
+      removeMessageHandler(toValue(oldTopic))
+      addMessageHandler(toValue(newTopic), callback)
+    },
+    {
+      immediate: true,
+    },
+  )
 }

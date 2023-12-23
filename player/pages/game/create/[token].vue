@@ -1,6 +1,6 @@
 <template>
   <form @submit.prevent="createGame">
-    <input type="text" v-model="character" />
+    <button class="btn btn-primary">Button</button>
     <input type="submit" value="abla" />
   </form>
 </template>
@@ -9,12 +9,10 @@ const api = useApi()
 const router = useRouter()
 const route = useRoute()
 
-const character = ref('')
-
 async function createGame() {
   await api('/login').post({ username: 'admin', password: 'admin' })
   const { data } = await api('/game/', { headers: { 'X-Device-Token': route.params.token } })
-    .post({ character: character.value })
+    .post()
     .json()
   router.push({ name: 'game-id', params: { id: data.value.pk } })
 }

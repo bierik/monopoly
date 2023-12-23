@@ -38,6 +38,3 @@ class DeviceTestCase(APITestCase):
             ["939a9fd3-6b4c-4f64-bce0-c642d292df95"],
             list(map(str, Device.objects.values_list("token", flat=True))),
         )
-
-    def test_rejects_malformat_token(self):
-        pass
