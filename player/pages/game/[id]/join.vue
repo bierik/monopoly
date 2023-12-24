@@ -11,7 +11,6 @@ const api = useApi()
 const character = ref('')
 
 async function joinGame() {
-  await api('/login').post({ username: 'hans', password: 'hans' })
-  const { data } = await api(`/game/${route.params.id}/join/`).post({ character: character.value }).json()
+  const { data } = await api(`/game/${route.params.id}/join/`, { method: 'POST', body: { character: character.value } })
 }
 </script>

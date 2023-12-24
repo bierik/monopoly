@@ -1,20 +1,9 @@
-import { createFetch, useFetch } from '@vueuse/core'
+await $fetch('/api/csrf')
 
-await useFetch('/api/csrf').get()
-
-const api = createFetch({
-  baseUrl: '/api',
-  options: {
-    beforeFetch({ options }) {
-      const { value: csrfToken } = useCookie('csrftoken')
-      options.headers = {
-        ...options.headers,
-        'X-CSRFToken': csrfToken,
-      }
-      return { options }
-    },
-  },
-})
+const headers = {
+  'X-CSRFToken': toValue(useCookie('csrftoken')),
+}
+const api = $fetch.create({ baseURL: '/api', headers })
 
 export default function () {
   return api

@@ -1,6 +1,7 @@
+from rest_framework import serializers
+
 from core.authentication.serializers import PlayerDetailSerializer
 from core.game.models import Character, Game, Participation
-from rest_framework import serializers
 
 
 class JoinGameSerializer(serializers.Serializer):
@@ -16,7 +17,7 @@ class GameDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Game
-        fields = ["pk", "status", "status_display"]
+        fields = ["pk", "status", "status_display", "max_participations"]
 
 
 class CharacterDetailSerializer(serializers.ModelSerializer):

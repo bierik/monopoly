@@ -5,7 +5,6 @@
       <QrcodeVue
         class="create-game-qrcode"
         background="transparent"
-        foreground="white"
         render-as="svg"
         :size="200"
         v-if="!pending"
@@ -36,3 +35,13 @@ onMessage(createdGameMessage, ({ game_id: gameId }) => {
   router.replace({ name: 'lobby-id', params: { id: gameId } })
 })
 </script>
+<style>
+.qr-code > path + path {
+  fill: white;
+}
+@media (prefers-color-scheme: light) {
+  .qr-code > path + path {
+    fill: black;
+  }
+}
+</style>
