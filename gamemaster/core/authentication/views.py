@@ -2,6 +2,7 @@ from django.contrib.auth import authenticate, login, logout
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
@@ -21,8 +22,14 @@ class AuthenticationViewSet(GenericViewSet):
             GameDetailSerializer(Game.objects.owned(request.user), many=True).data
         )
 
+    @action(methods=["GET"], detail=False)
+    def me(self, request):
+        return Response(PlayerDetailSerializer(request.user).data)
+
 
 class LoginView(APIView):
+    permission_classes = [AllowAny]
+
     def post(self, request, format=None):
         serializer = LoginRequestSerializer(data=request.data)
         if not serializer.is_valid():

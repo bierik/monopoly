@@ -21,7 +21,7 @@ urlpatterns = [
         BoardExportView.as_view(),
         name="board-export",
     ),
-    path("api/login", LoginView.as_view(), name="login"),
-    path("api/logout", LogoutView.as_view(), name="logout"),
-    path("api/csrf", CSRFView.as_view(), name="csrf"),
+    path("api/login/", LoginView.as_view(), name="login"),
+    path("api/logout/", LogoutView.as_view(), name="logout"),
+    path("api/csrf/", CSRFView.as_view(), name="csrf"),
 ]

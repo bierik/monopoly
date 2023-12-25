@@ -1,6 +1,6 @@
 import { useLocalStorage } from '@vueuse/core'
 
-await $fetch('/api/csrf')
+await $fetch('/api/csrf/')
 
 const deviceToken = toValue(useLocalStorage('deviceToken', null))
 const headers = {

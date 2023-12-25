@@ -2,7 +2,7 @@
   <div class="container mx-auto h-screen flex flex-col justify-center px-4">
     <div class="card">
       <form @submit.prevent="createGame" class="flex flex-col">
-        <input type="number" placeholder="Wie viele Teilnehmende?" class="input w-full mb-4 ghost" />
+        <input type="number" placeholder="Anzahl Spieler?" class="input w-full mb-4 outline" />
         <button type="submit" class="btn btn-primary">Erstellen</button>
       </form>
     </div>

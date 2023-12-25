@@ -2,16 +2,17 @@ import random
 from unittest import mock
 
 import pydash
-from core.device.models import Device
-from core.game.exceptions import MaxParticipationsExceeded
-from core.game.models import Character, Game, GameStatus, Participation
-from core.game.state_machine import GameMachine
-from core.testutils import create_player_client
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 from statemachine.exceptions import TransitionNotAllowed
+
+from core.device.models import Device
+from core.game.exceptions import MaxParticipationsExceeded
+from core.game.models import Character, Game, GameStatus, Participation
+from core.game.state_machine import GameMachine
+from core.testutils import create_player_client
 
 User = get_user_model()
 
@@ -35,8 +36,10 @@ class GameTestCase(APITestCase):
         )
 
     def test_joining_requires_a_character(self):
-        game = Game.objects.create(owner=User.objects.create(username="hans"))
-        response = self.client.post(reverse("game-join", kwargs={"pk": game.pk}))
+        player = User.objects.create(username="hans")
+        player_client = create_player_client(player)
+        game = Game.objects.create(owner=player)
+        response = player_client.post(reverse("game-join", kwargs={"pk": game.pk}))
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(
             {

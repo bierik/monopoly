@@ -104,3 +104,16 @@ class AuthenticationTestCase(APITestCase):
 
         response = client.post(reverse("logout"))
         self.assertEqual(status.HTTP_204_NO_CONTENT, response.status_code)
+
+    def test_get_logged_in_user(self):
+        client = APIClient()
+
+        response = client.get(reverse("authentication-me"))
+        self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
+
+        hans = User.objects.create(username="hans")
+        client.force_authenticate(hans)
+
+        response = client.get(reverse("authentication-me"))
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertEqual("hans", response.json()["username"])

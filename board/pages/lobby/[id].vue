@@ -1,6 +1,6 @@
 <template>
   <div class="container mx-auto h-screen flex flex-col justify-center items-center px-4">
-    <a :href="joinGameURL">
+    <a :href="joinGameURL" class="mb-12">
       <QrcodeVue
         :size="200"
         class="qr-code"
@@ -10,12 +10,12 @@
         render-as="svg"
       />
     </a>
-    <div class="flex">
-      <div class="card" v-for="participation in lobby">
+    <div class="grid gap-4 grid-cols-4 grid-rows-1">
+      <div class="card bg-slate-200 flex justify-center items-center" v-for="participation in lobby">
         {{ participation.player.username }}
       </div>
-      <div class="card" v-for="_ in missingParticipations">
-        <Icon class="animate-spin" name="mdi-light:loading" />
+      <div class="card bg-slate-400 p-12" v-for="_ in missingParticipations">
+        <Icon :size="50" class="animate-spin" name="mdi-light:loading" />
       </div>
     </div>
   </div>

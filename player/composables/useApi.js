@@ -1,4 +1,4 @@
-await $fetch('/api/csrf')
+await $fetch('/api/csrf/')
 
 const headers = {
   'X-CSRFToken': toValue(useCookie('csrftoken')),
