@@ -1,5 +1,11 @@
-from core.game.models import Game
+from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.viewsets import GenericViewSet, mixins
+
+from core.game.models import Character, Game
 from core.game.serializers import (
+    CharacterDetailSerializer,
     CreateGameSerializer,
     GameDetailSerializer,
     JoinGameSerializer,
@@ -7,10 +13,6 @@ from core.game.serializers import (
 )
 from core.mqtt_client import mqtt_client
 from core.views import SerializerActionMixin
-from rest_framework import status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.viewsets import GenericViewSet, mixins
 
 
 class GameView(SerializerActionMixin, GenericViewSet, mixins.RetrieveModelMixin):
@@ -47,3 +49,8 @@ class GameView(SerializerActionMixin, GenericViewSet, mixins.RetrieveModelMixin)
         return Response(
             data=GameDetailSerializer(game).data, status=status.HTTP_201_CREATED
         )
+
+
+class CharacterViewSet(GenericViewSet, mixins.ListModelMixin):
+    queryset = Character.objects.all()
+    serializer_class = CharacterDetailSerializer

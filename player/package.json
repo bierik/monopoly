@@ -20,6 +20,7 @@
     "vue-router": "^4.2.5"
   },
   "dependencies": {
-    "@vueuse/core": "^10.7.0"
+    "@vueuse/core": "^10.7.0",
+    "three": "^0.160.0"
   }
 }

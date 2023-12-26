@@ -15,8 +15,8 @@
         <GLTFViewer :path="participation.character.url" />
         {{ participation.player.username }}
       </div>
-      <div class="card bg-slate-400 p-12" v-for="_ in missingParticipations">
-        <Icon size="50px" class="animate-spin" name="mdi-light:loading" />
+      <div class="card bg-slate-400 p-12 flex justify-center items-center" v-for="_ in missingParticipations">
+        <span class="loading loading-ring loading-lg text-primary" />
       </div>
     </div>
   </div>

@@ -7,7 +7,6 @@
         background="transparent"
         render-as="svg"
         :size="200"
-        v-if="!pending"
         :value="createGameURL"
       />
     </a>
@@ -16,20 +15,16 @@
 </template>
 <script setup>
 import { createCreateGameURL } from '@/url'
-import get from 'lodash/get'
 
 const router = useRouter()
 const onMessage = useOnMessage()
 const api = useApi()
 
-const { pending, data } = await useLazyAsyncData('register-device', () => api('/device/register/', { method: 'POST' }))
-const deviceToken = computed(() => get(toValue(data), 'token'))
-const createdGameMessage = computed(() => `${toValue(deviceToken)}/game/created`)
-const createGameURL = computed(() => createCreateGameURL(deviceToken))
+const { data } = await useAsyncData('register-device', () => api('/device/register/', { method: 'POST' }))
+useDeviceToken().value = toValue(data).token
 
-watch(data, () => {
-  useDeviceToken().value = toValue(deviceToken)
-})
+const createdGameMessage = computed(() => `${toValue(data).token}/game/created`)
+const createGameURL = computed(() => createCreateGameURL(deviceToken))
 
 onMessage(createdGameMessage, ({ game_id: gameId }) => {
   router.replace({ name: 'lobby-id', params: { id: gameId } })
