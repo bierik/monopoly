@@ -63,3 +63,19 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
       POSTGRES_DB: postgres
+
+  test-db:
+    container_name: test-db
+    image: postgres:16.1-alpine3.18
+    ports:
+      - 5010:5432
+    volumes:
+      - type: tmpfs
+        target: /var/lib/postgresql/data
+        tmpfs:
+          size: 500000000
+    command: postgres --fsync=off --synchronous-commit=off --full-page-writes=off
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres

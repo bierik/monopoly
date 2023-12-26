@@ -17,6 +17,9 @@ drf-standardized-errors = "^0.12.6"
 django-ordered-model = "^3.7.4"
 python-statemachine = "^2.1.2"
 networkx = "^3.2.1"
+pygltflib = "^1.16.1"
+pytest-django = "^4.7.0"
+django-configurations = "^2.5"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -26,3 +29,8 @@ pytest-django = "^4.7.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "settings"
+DJANGO_CONFIGURATION = "Testing"
+python_files = "tests.py test_*.py *_tests.py"

@@ -1,8 +1,12 @@
 import random
+from pathlib import Path
 from unittest import mock
 
 import pydash
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError
+from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import TestCase, override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -16,11 +20,24 @@ from core.testutils import create_player_client
 
 User = get_user_model()
 
+with open(Path(__file__).parent / "fixtures" / "Casual_Male.gltf", "rb") as gltf:
+    DEFAULT_CHARACTER_MODEL = gltf.read()
+
+
+def create_character(name, identifier):
+    return Character.objects.create(
+        name=name,
+        identifier=identifier,
+        model=SimpleUploadedFile(
+            "model.gltf", DEFAULT_CHARACTER_MODEL, "application/json"
+        ),
+    )
+
 
 class GameTestCase(APITestCase):
     def test_creates_game(self):
         device = Device.objects.create(user_agent="user_agent")
-        character = Character.objects.create(name="Goblin", identifier="goblin")
+        character = create_character(name="Goblin", identifier="goblin")
         player = User.objects.create(username="hans")
         player_client = create_player_client(player)
         self.assertEqual(0, Game.objects.count())
@@ -56,7 +73,7 @@ class GameTestCase(APITestCase):
         )
 
     def test_player_can_join_a_game(self):
-        character = Character.objects.create(name="Goblin", identifier="goblin")
+        character = create_character(name="Goblin", identifier="goblin")
         player = User.objects.create(username="hans")
         player_client = create_player_client(player)
         game = Game.objects.create(owner=User.objects.create(username="peter"))
@@ -76,7 +93,7 @@ class GameTestCase(APITestCase):
         )
 
     def test_player_can_only_join_once(self):
-        character = Character.objects.create(name="Goblin", identifier="goblin")
+        character = create_character(name="Goblin", identifier="goblin")
         player = User.objects.create(username="hans")
         player_client = create_player_client(player)
         game = Game.objects.create(owner=User.objects.create(username="peter"))
@@ -102,7 +119,7 @@ class GameTestCase(APITestCase):
         )
 
     def test_player_can_only_join_a_fresh_game(self):
-        character = Character.objects.create(name="Goblin", identifier="goblin")
+        character = create_character(name="Goblin", identifier="goblin")
         player = User.objects.create(username="hans")
         player_client = create_player_client(player)
         game = Game.objects.create(
@@ -128,7 +145,7 @@ class GameTestCase(APITestCase):
         )
 
     def test_a_character_can_only_participate_once_in_a_game(self):
-        character = Character.objects.create(name="Goblin", identifier="goblin")
+        character = create_character(name="Goblin", identifier="goblin")
         hans = User.objects.create(username="hans")
         hans_client = create_player_client(hans)
         peter = User.objects.create(username="peter")
@@ -159,7 +176,7 @@ class GameTestCase(APITestCase):
 
     def test_creating_a_game_sets_the_creator_as_the_owner(self):
         device = Device.objects.create(user_agent="user_agent")
-        character = Character.objects.create(name="Goblin", identifier="goblin")
+        character = create_character(name="Goblin", identifier="goblin")
         player = User.objects.create(username="hans")
         player_client = create_player_client(player)
         self.assertEqual(0, Game.objects.count())
@@ -180,10 +197,10 @@ class GameTestCase(APITestCase):
         urs = User.objects.create(username="urs")
 
         game = Game.objects.create(owner=hans, max_participations=2)
-        game.join(hans, Character.objects.create(name="Goblin", identifier="goblin"))
-        game.join(peter, Character.objects.create(name="Pirate", identifier="pirate"))
+        game.join(hans, create_character(name="Goblin", identifier="goblin"))
+        game.join(peter, create_character(name="Pirate", identifier="pirate"))
         with self.assertRaises(MaxParticipationsExceeded):
-            game.join(urs, Character.objects.create(name="Male", identifier="male"))
+            game.join(urs, create_character(name="Male", identifier="male"))
 
     def test_correctly_determines_whose_turn_is_next(self):
         hans = User.objects.create(username="hans")
@@ -192,10 +209,10 @@ class GameTestCase(APITestCase):
         bruno = User.objects.create(username="bruno")
         game = Game.objects.create(owner=hans)
 
-        game.join(hans, Character.objects.create(name="Goblin", identifier="goblin"))
-        game.join(peter, Character.objects.create(name="Pirate", identifier="pirate"))
-        game.join(urs, Character.objects.create(name="Male", identifier="male"))
-        game.join(bruno, Character.objects.create(name="Robot", identifier="robot"))
+        game.join(hans, create_character(name="Goblin", identifier="goblin"))
+        game.join(peter, create_character(name="Pirate", identifier="pirate"))
+        game.join(urs, create_character(name="Male", identifier="male"))
+        game.join(bruno, create_character(name="Robot", identifier="robot"))
 
         self.assertEqual(None, game.current_turn)
         self.assertEqual(hans, game.next_turn)
@@ -217,16 +234,10 @@ class GameTestCase(APITestCase):
         game = Game.objects.create(owner=hans)
 
         participations = [
-            game.join(
-                hans, Character.objects.create(name="Goblin", identifier="goblin")
-            ),
-            game.join(
-                peter, Character.objects.create(name="Pirate", identifier="pirate")
-            ),
-            game.join(urs, Character.objects.create(name="Male", identifier="male")),
-            game.join(
-                bruno, Character.objects.create(name="Robot", identifier="robot")
-            ),
+            game.join(hans, create_character(name="Goblin", identifier="goblin")),
+            game.join(peter, create_character(name="Pirate", identifier="pirate")),
+            game.join(urs, create_character(name="Male", identifier="male")),
+            game.join(bruno, create_character(name="Robot", identifier="robot")),
         ]
 
         self.assertEqual(
@@ -249,7 +260,7 @@ class GameTestCase(APITestCase):
     def test_configure_max_participations(self):
         device = Device.objects.create(user_agent="user_agent")
         hans = User.objects.create(username="hans")
-        character = Character.objects.create(name="Goblin", identifier="goblin")
+        character = create_character(name="Goblin", identifier="goblin")
 
         hans_client = create_player_client(hans)
         response = hans_client.post(
@@ -268,7 +279,7 @@ class GameTestCase(APITestCase):
         self, mqtt_publish
     ):
         device = Device.objects.create(user_agent="user_agent")
-        character = Character.objects.create(name="Goblin", identifier="goblin")
+        character = create_character(name="Goblin", identifier="goblin")
         player = User.objects.create(username="hans")
         player_client = create_player_client(player)
         response = player_client.post(
@@ -284,7 +295,7 @@ class GameTestCase(APITestCase):
     def test_notifies_when_a_game_receives_a_participation(self, mqtt_publish):
         hans = User.objects.create(username="hans")
         game = Game.objects.create(owner=hans)
-        game.join(hans, Character.objects.create(name="Goblin", identifier="goblin"))
+        game.join(hans, create_character(name="Goblin", identifier="goblin"))
         mqtt_publish.assert_called_with(f"game/{game.pk}/joined", {"game_id": game.pk})
 
     @mock.patch("core.mqtt_client.mqtt_client.publish")
@@ -298,8 +309,8 @@ class GameTestCase(APITestCase):
         hans = User.objects.create(username="hans")
         peter = User.objects.create(username="peter")
         game = Game.objects.create(owner=hans)
-        game.join(hans, Character.objects.create(name="Goblin", identifier="goblin"))
-        game.join(peter, Character.objects.create(name="Male", identifier="male"))
+        game.join(hans, create_character(name="Goblin", identifier="goblin"))
+        game.join(peter, create_character(name="Male", identifier="male"))
 
         player_client = create_player_client(hans)
         response = player_client.get(reverse("game-lobby", kwargs={"pk": game.pk}))
@@ -320,18 +331,16 @@ class GameMaschineTestCase(APITestCase):
     def test_restricts_turn_to_players_turn(self):
         hans_machine = GameMachine(
             self.game.join(
-                self.hans, Character.objects.create(name="Goblin", identifier="goblin")
+                self.hans, create_character(name="Goblin", identifier="goblin")
             )
         )
         bruno_machine = GameMachine(
             self.game.join(
-                self.bruno, Character.objects.create(name="Pirate", identifier="pirate")
+                self.bruno, create_character(name="Pirate", identifier="pirate")
             )
         )
         urs_machine = GameMachine(
-            self.game.join(
-                self.urs, Character.objects.create(name="Male", identifier="male")
-            )
+            self.game.join(self.urs, create_character(name="Male", identifier="male"))
         )
 
         machines = [hans_machine, bruno_machine, urs_machine]
@@ -353,12 +362,10 @@ class GameMaschineTestCase(APITestCase):
     def test_hands_over_turn_to_next_player(self):
         hans_machine = GameMachine(
             self.game.join(
-                self.hans, Character.objects.create(name="Goblin", identifier="goblin")
+                self.hans, create_character(name="Goblin", identifier="goblin")
             )
         )
-        self.game.join(
-            self.bruno, Character.objects.create(name="Goblin", identifier="goblin")
-        )
+        self.game.join(self.bruno, create_character(name="Goblin", identifier="goblin"))
         self.game.give_turn_to(self.hans)
         hans_machine.start_turn()
         hans_machine.roll_dice()
@@ -372,7 +379,7 @@ class GameMaschineTestCase(APITestCase):
         random.seed(42)
 
         participation = self.game.join(
-            self.hans, Character.objects.create(name="Goblin", identifier="goblin")
+            self.hans, create_character(name="Goblin", identifier="goblin")
         )
         hans_machine = GameMachine(participation)
         self.game.give_turn_to(self.hans)
@@ -384,3 +391,44 @@ class GameMaschineTestCase(APITestCase):
         hans_machine.move()
         participation.refresh_from_db(fields=["current_tile"])
         self.assertEqual("chance3", participation.current_tile)
+
+
+@override_settings(VALIDATE_GLTF=True)
+class CharacterTestCase(TestCase):
+    def test_model_is_required(self):
+        with self.assertRaises(ValidationError):
+            Character.objects.create(name="male", identifier="identifier")
+
+    def test_only_accespts_gltf_files_for_model(self):
+        try:
+            Character.objects.create(
+                name="male",
+                identifier="identifier",
+                model=SimpleUploadedFile("model.json", b"{}", "application/json"),
+            )
+            self.fail("Only .gltf file extension should be valid.")
+        except ValidationError as e:
+            self.assertIn(
+                "Dateiendung „json“ ist nicht erlaubt. Erlaubte Dateiendungen sind: „gltf“.",
+                e.messages,
+            )
+
+    def test_model_includes_necessary_animations(self):
+        with open(
+            Path(__file__).parent / "fixtures" / "Casual_Male.gltf", "rb"
+        ) as gltf:
+            Character.objects.create(
+                name="male",
+                identifier="identifier",
+                model=SimpleUploadedFile("model.gltf", gltf.read(), "application/json"),
+            )
+
+        with self.assertRaisesMessage(
+            ValidationError,
+            "{'model': ['Missing animations on gltf model. Necessary animations: Idle, Walk, Run']}",
+        ):
+            Character.objects.create(
+                name="male",
+                identifier="identifier",
+                model=SimpleUploadedFile("model.gltf", b"{}", "application/json"),
+            )

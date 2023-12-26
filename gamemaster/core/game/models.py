@@ -1,10 +1,14 @@
 from functools import cached_property
 
+import pydash
 from django.conf import settings
+from django.core.exceptions import ValidationError
+from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django_extensions.db.models import TimeStampedModel
 from ordered_model.models import OrderedModel
+from pygltflib import GLTF2
 
 from core.board.registry import board_registry
 from core.game.exceptions import (
@@ -23,6 +27,18 @@ class GameStatus(models.TextChoices):
     FINISHED = "FINISHED", _("Abgeschlossen")
 
 
+class MissingAnimationsException(ValidationError):
+    def __init__(self):
+        super().__init__(
+            {
+                "model": _(
+                    "Missing animations on gltf model. Necessary animations: {animations}"
+                ).format(animations=", ".join(settings.GLTF_ANIMATIONS))
+            },
+            "missing_animations",
+        )
+
+
 class Character(models.Model):
     class Meta:
         verbose_name = _("Spielfigur")
@@ -33,6 +49,25 @@ class Character(models.Model):
     identifier = models.TextField(
         verbose_name=_("Identifier"), help_text=_("Muss einem gltf Modell entsprechen.")
     )
+    model = models.FileField(
+        verbose_name=_("3D Modell"), validators=[FileExtensionValidator(["gltf"])]
+    )
+
+    def save(self, *args, **kwargs):
+        super().full_clean()
+        return super().save(*args, **kwargs)
+
+    def validate_gltf(self):
+        gltf = GLTF2.from_json(self.model.file.read())
+        animation_names = set(pydash.pluck(gltf.animations, "name"))
+
+        if not set(settings.GLTF_ANIMATIONS).issubset(animation_names):
+            raise MissingAnimationsException()
+
+    def clean(self):
+        super().clean_fields()
+        if settings.VALIDATE_GLTF:
+            self.validate_gltf()
 
 
 class GameManager(models.Manager):
