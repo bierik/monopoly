@@ -21,9 +21,11 @@ class GameDetailSerializer(serializers.ModelSerializer):
 
 
 class CharacterDetailSerializer(serializers.ModelSerializer):
+    url = serializers.CharField(source="model.url")
+
     class Meta:
         model = Character
-        fields = ["pk", "name", "identifier"]
+        fields = ["pk", "name", "identifier", "url"]
 
 
 class ParticipationLobbySerializer(serializers.ModelSerializer):

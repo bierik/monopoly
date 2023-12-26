@@ -91,6 +91,11 @@ class Development(Base):
         }
     }
 
+    def MEDIA_ROOT(self):
+        return self.BASE_DIR / "media"
+
+    MEDIA_URL = "/media/"
+
 
 class Testing(Base):
     SECRET_KEY = "testing"

@@ -38,6 +38,8 @@ services:
       DJANGO_DATABASE_USER: postgres
     depends_on:
       - mosquitto
+    stdin_open: true
+    tty: true
 
   player:
     container_name: player

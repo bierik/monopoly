@@ -50,7 +50,9 @@ class Character(models.Model):
         verbose_name=_("Identifier"), help_text=_("Muss einem gltf Modell entsprechen.")
     )
     model = models.FileField(
-        verbose_name=_("3D Modell"), validators=[FileExtensionValidator(["gltf"])]
+        verbose_name=_("3D Modell"),
+        validators=[FileExtensionValidator(["gltf"])],
+        upload_to="characters",
     )
 
     def save(self, *args, **kwargs):
@@ -58,6 +60,7 @@ class Character(models.Model):
         return super().save(*args, **kwargs)
 
     def validate_gltf(self):
+        self.model.file.seek(0)
         gltf = GLTF2.from_json(self.model.file.read())
         animation_names = set(pydash.pluck(gltf.animations, "name"))
 

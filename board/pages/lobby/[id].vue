@@ -12,10 +12,11 @@
     </a>
     <div class="grid gap-4 grid-cols-4 grid-rows-1">
       <div class="card bg-slate-200 flex justify-center items-center" v-for="participation in lobby">
+        <GLTFViewer :path="participation.character.url" />
         {{ participation.player.username }}
       </div>
       <div class="card bg-slate-400 p-12" v-for="_ in missingParticipations">
-        <Icon :size="50" class="animate-spin" name="mdi-light:loading" />
+        <Icon size="50px" class="animate-spin" name="mdi-light:loading" />
       </div>
     </div>
   </div>

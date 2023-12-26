@@ -6,6 +6,9 @@ export default defineNuxtConfig({
       '/api/': {
         target: 'http://gamemaster:8000/api/',
       },
+      '/media/': {
+        target: 'http://gamemaster:8000/media/',
+      },
     },
   },
   modules: ['@nuxtjs/tailwindcss', 'nuxt-icon'],

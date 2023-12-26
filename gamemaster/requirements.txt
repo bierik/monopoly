@@ -1,12 +1,18 @@
 asgiref==3.7.2 ; python_version >= "3.11" and python_version < "3.13" \
     --hash=sha256:89b2ef2247e3b562a16eef663bc0e2e703ec6468e2fa8a5cd61cd449786d4f6e \
     --hash=sha256:9e0ce3aa93a819ba5b45120216b23878cf6e8525eb3848653452b4192b92afed
+colorama==0.4.6 ; python_version >= "3.11" and python_version < "3.13" and sys_platform == "win32" \
+    --hash=sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44 \
+    --hash=sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6
 dataclasses-json==0.6.3 ; python_version >= "3.11" and python_version < "3.13" \
     --hash=sha256:35cb40aae824736fdf959801356641836365219cfe14caeb115c39136f775d2a \
     --hash=sha256:4aeb343357997396f6bca1acae64e486c3a723d8f5c76301888abeccf0c45176
 deprecated==1.2.14 ; python_version >= "3.11" and python_version < "3.13" \
     --hash=sha256:6fac8b097794a90302bdbb17b9b815e732d3c4720583ff1b198499d78470466c \
     --hash=sha256:e5323eb936458dccc2582dc6f9c322c852a775a27065ff2b0c4970b9d53d01b3
+django-configurations==2.5 ; python_version >= "3.11" and python_version < "3.13" \
+    --hash=sha256:63fa252c40dc88ea17b8b90f5f4a31a2726e586acb1ff0edc74c228c61f19e5d \
+    --hash=sha256:cf063b99ad30013df49eaa971bd8543deffb008ff080cf3a92955dbccfe81a5c
 django-extensions==3.2.3 ; python_version >= "3.11" and python_version < "3.13" \
     --hash=sha256:44d27919d04e23b3f40231c4ab7af4e61ce832ef46d610cc650d53e68328410a \
     --hash=sha256:9600b7562f79a92cbf1fde6403c04fee314608fefbb595502e34383ae8203401
@@ -22,6 +28,9 @@ djangorestframework==3.14.0 ; python_version >= "3.11" and python_version < "3.1
 drf-standardized-errors==0.12.6 ; python_version >= "3.11" and python_version < "3.13" \
     --hash=sha256:6f71d895427a5c4658c7c653ebd3755840514e0cc6a433e484808ad5191b22ee \
     --hash=sha256:f71d5fce12bca8d1ce41cc65024014efbddb35c6b51a193db9a938b57385100d
+iniconfig==2.0.0 ; python_version >= "3.11" and python_version < "3.13" \
+    --hash=sha256:2d91e135bf72d31a410b17c16da610a82cb55f6b0477d1a902134b24a455b8b3 \
+    --hash=sha256:b6a85871a79d2e3b22d2d1b94ac2824226a63c6b741c88f7ae975f18b6778374
 marshmallow==3.20.1 ; python_version >= "3.11" and python_version < "3.13" \
     --hash=sha256:5d2371bbe42000f2b3fb5eaa065224df7d8f8597bc19a1bbfa5bfe7fba8da889 \
     --hash=sha256:684939db93e80ad3561392f47be0230743131560a41c5110684c16e21ade0a5c
@@ -36,6 +45,9 @@ packaging==23.2 ; python_version >= "3.11" and python_version < "3.13" \
     --hash=sha256:8c491190033a9af7e1d931d0b5dacc2ef47509b34dd0de67ed209b5203fc88c7
 paho-mqtt==1.6.1 ; python_version >= "3.11" and python_version < "3.13" \
     --hash=sha256:2a8291c81623aec00372b5a85558a372c747cbca8e9934dfe218638b8eefc26f
+pluggy==1.3.0 ; python_version >= "3.11" and python_version < "3.13" \
+    --hash=sha256:cf61ae8f126ac6f7c451172cf30e3e43d3ca77615509771b3a984a0730651e12 \
+    --hash=sha256:d89c696a773f8bd377d18e5ecda92b7a3793cbe66c87060a6fb58c7b6e1061f7
 psycopg2==2.9.9 ; python_version >= "3.11" and python_version < "3.13" \
     --hash=sha256:121081ea2e76729acfb0673ff33755e8703d45e926e416cb59bae3a86c6a4981 \
     --hash=sha256:38a8dcc6856f569068b47de286b472b7c473ac7977243593a288ebce0dc89516 \
@@ -55,6 +67,12 @@ pydash==7.0.6 ; python_version >= "3.11" and python_version < "3.13" \
     --hash=sha256:7d9df7e9f36f2bbb08316b609480e7c6468185473a21bdd8e65dda7915565a26
 pygltflib==1.16.1 ; python_version >= "3.11" and python_version < "3.13" \
     --hash=sha256:ccea04343382bacaa8f00f4cf0bfdaada468ba0e4f174f88d701af0695761bf3
+pytest-django==4.7.0 ; python_version >= "3.11" and python_version < "3.13" \
+    --hash=sha256:4e1c79d5261ade2dd58d91208017cd8f62cb4710b56e012ecd361d15d5d662a2 \
+    --hash=sha256:92d6fd46b1d79b54fb6b060bbb39428073396cec717d5f2e122a990d4b6aa5e8
+pytest==7.4.3 ; python_version >= "3.11" and python_version < "3.13" \
+    --hash=sha256:0d009c083ea859a71b76adf7c1d502e4bc170b80a8ef002da5806527b9591fac \
+    --hash=sha256:d989d136982de4e3b29dabcc838ad581c64e8ed52c11fbe86ddebd9da0818cd5
 python-statemachine==2.1.2 ; python_version >= "3.11" and python_version < "3.13" \
     --hash=sha256:0b0dd8b28738b53f14391b06d5072cd5e72259da5ae23574d3d4f5e6dd366663 \
     --hash=sha256:d7e369d5da5b9007cc7cf5eb7a1b169081e2f4b7d30b6415fc122858fb7696ec

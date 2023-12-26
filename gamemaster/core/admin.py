@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin
 
 from core.authentication.models import Player
 from core.device.models import Device
@@ -6,7 +7,7 @@ from core.game.models import Character, Game
 
 
 @admin.register(Player)
-class PlayerAdmin(admin.ModelAdmin):
+class PlayerAdmin(UserAdmin):
     pass
 
 
