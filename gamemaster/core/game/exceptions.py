@@ -31,3 +31,19 @@ class MaxParticipationsExceeded(ValidationError):
             detail="The maximum amount of participations is exceeded.",
             code="max_participations_exeeded",
         )
+
+
+class LobbyNotReadyException(ValidationError):
+    def __init__(self):
+        super().__init__(
+            detail="Not all participants have joined yet.",
+            code="lobby_not_ready",
+        )
+
+
+class GameStartException(ValidationError):
+    def __init__(self):
+        super().__init__(
+            detail="Game is in the wrong status to start.",
+            code="game_start",
+        )

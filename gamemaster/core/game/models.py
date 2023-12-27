@@ -13,7 +13,9 @@ from pygltflib import GLTF2
 from core.board.registry import board_registry
 from core.game.exceptions import (
     AlreadyParticipantException,
+    GameStartException,
     JoinStartedGameException,
+    LobbyNotReadyException,
     MaxParticipationsExceeded,
     SameCharacterException,
 )
@@ -25,6 +27,8 @@ class GameStatus(models.TextChoices):
     RUNNING = "RUNNING", _("Läuft")
     PAUSED = "PAUSED", _("Pausiert")
     FINISHED = "FINISHED", _("Abgeschlossen")
+
+    accept_start_status = [CREATED, RUNNING]
 
 
 class MissingAnimationsException(ValidationError):
@@ -144,6 +148,10 @@ class Game(TimeStampedModel):
         self.give_turn_to(self.next_turn)
 
     def start(self):
+        if self.participations.count() != self.max_participations:
+            raise LobbyNotReadyException()
+        if self.status not in GameStatus.accept_start_status:
+            raise GameStartException()
         self.status = GameStatus.RUNNING
         self.save(update_fields=["status"])
         mqtt_client.publish(f"game/{self.pk}/started", {"game_id": self.pk})

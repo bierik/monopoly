@@ -10,6 +10,7 @@
         render-as="svg"
       />
     </a>
+    {{ game.max_participations }}
     <div class="grid gap-4 grid-cols-4 grid-rows-1">
       <div class="card bg-slate-200 flex justify-center items-center" v-for="participation in lobby">
         <GLTFViewer :path="participation.character.url" />

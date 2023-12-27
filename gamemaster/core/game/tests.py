@@ -13,7 +13,7 @@ from rest_framework.test import APITestCase
 from statemachine.exceptions import TransitionNotAllowed
 
 from core.device.models import Device
-from core.game.exceptions import MaxParticipationsExceeded
+from core.game.exceptions import FullLobbyException, MaxParticipationsExceeded
 from core.game.models import Character, Game, GameStatus, Participation
 from core.game.state_machine import GameMachine
 from core.testutils import create_player_client
@@ -298,13 +298,6 @@ class GameTestCase(APITestCase):
         game.join(hans, create_character(name="Goblin", identifier="goblin"))
         mqtt_publish.assert_called_with(f"game/{game.pk}/joined", {"game_id": game.pk})
 
-    @mock.patch("core.mqtt_client.mqtt_client.publish")
-    def test_notifies_when_a_game_has_started(self, mqtt_publish):
-        hans = User.objects.create(username="hans")
-        game = Game.objects.create(owner=hans)
-        game.start()
-        mqtt_publish.assert_called_with(f"game/{game.pk}/started", {"game_id": game.pk})
-
     def test_lists_participations_for_a_game_lobby(self):
         hans = User.objects.create(username="hans")
         peter = User.objects.create(username="peter")
@@ -318,6 +311,69 @@ class GameTestCase(APITestCase):
         self.assertEqual(
             ["hans", "peter"], pydash.pluck(response.json(), "player.username")
         )
+
+    def test_only_the_owner_can_start_the_game(self):
+        hans = User.objects.create(username="hans")
+        peter = User.objects.create(username="peter")
+        game = Game.objects.create(owner=hans)
+
+        client = create_player_client(peter)
+        response = client.post(reverse("game-start", kwargs={"pk": game.pk}))
+        self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
+
+    def test_reject_game_start_until_all_participants_have_joined(self):
+        hans = User.objects.create(username="hans")
+        game = Game.objects.create(owner=hans, max_participations=2)
+        game.join(hans, create_character(name="Goblin", identifier="goblin"))
+
+        client = create_player_client(hans)
+        response = client.post(reverse("game-start", kwargs={"pk": game.pk}))
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(
+            {
+                "errors": [
+                    {
+                        "attr": None,
+                        "code": "lobby_not_ready",
+                        "detail": "Not all participants have joined yet.",
+                    }
+                ],
+                "type": "validation_error",
+            },
+            response.json(),
+        )
+
+    def test_can_only_start_a_created_or_paused_game(self):
+        hans = User.objects.create(username="hans")
+        game = Game.objects.create(owner=hans, max_participations=1)
+        game.join(hans, create_character(name="Goblin", identifier="goblin"))
+        game.status = GameStatus.FINISHED
+        game.save(update_fields=["status"])
+
+        client = create_player_client(hans)
+        response = client.post(reverse("game-start", kwargs={"pk": game.pk}))
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(
+            {
+                "errors": [
+                    {
+                        "attr": None,
+                        "code": "game_start",
+                        "detail": "Game is in the wrong status to start.",
+                    }
+                ],
+                "type": "validation_error",
+            },
+            response.json(),
+        )
+
+    @mock.patch("core.mqtt_client.mqtt_client.publish")
+    def test_notifies_when_a_game_has_started(self, mqtt_publish):
+        hans = User.objects.create(username="hans")
+        game = Game.objects.create(owner=hans, max_participations=1)
+        game.join(hans, create_character(name="Goblin", identifier="goblin"))
+        game.start()
+        mqtt_publish.assert_called_with(f"game/{game.pk}/started", {"game_id": game.pk})
 
 
 class GameMaschineTestCase(APITestCase):

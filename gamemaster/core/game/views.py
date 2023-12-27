@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins
 
 from core.game.models import Character, Game
+from core.game.permissions import IsGameOwnerPermission
 from core.game.serializers import (
     CharacterDetailSerializer,
     CreateGameSerializer,
@@ -21,6 +22,11 @@ class GameView(SerializerActionMixin, GenericViewSet, mixins.RetrieveModelMixin)
         "retrieve": GameDetailSerializer,
     }
 
+    def get_object(self):
+        obj = super().get_object()
+        self.check_object_permissions(self.request, obj)
+        return obj
+
     @action(methods=["POST"], detail=True)
     def join(self, request, pk=None):
         game = self.get_object()
@@ -35,6 +41,12 @@ class GameView(SerializerActionMixin, GenericViewSet, mixins.RetrieveModelMixin)
         return Response(
             ParticipationLobbySerializer(game.participations.all(), many=True).data
         )
+
+    @action(methods=["POST"], detail=True, permission_classes=[IsGameOwnerPermission])
+    def start(self, request, pk=None):
+        game = self.get_object()
+        game.start()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def create(self, request):
         serializer = CreateGameSerializer(data=request.data)
