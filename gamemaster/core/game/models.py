@@ -35,9 +35,9 @@ class MissingAnimationsException(ValidationError):
     def __init__(self):
         super().__init__(
             {
-                "model": _(
-                    "Missing animations on gltf model. Necessary animations: {animations}"
-                ).format(animations=", ".join(settings.GLTF_ANIMATIONS))
+                "model": _("Missing animations on gltf model. Necessary animations: {animations}").format(
+                    animations=", ".join(settings.GLTF_ANIMATIONS)
+                )
             },
             "missing_animations",
         )
@@ -50,9 +50,7 @@ class Character(models.Model):
         ordering = ["name"]
 
     name = models.TextField(verbose_name=_("Name"))
-    identifier = models.TextField(
-        verbose_name=_("Identifier"), help_text=_("Muss einem gltf Modell entsprechen.")
-    )
+    identifier = models.TextField(verbose_name=_("Identifier"))
     model = models.FileField(
         verbose_name=_("3D Modell"),
         validators=[FileExtensionValidator(["gltf"])],
@@ -90,9 +88,7 @@ class Game(TimeStampedModel):
 
     objects = GameManager()
 
-    status = models.CharField(
-        choices=GameStatus.choices, default=GameStatus.CREATED, verbose_name=_("Status")
-    )
+    status = models.CharField(choices=GameStatus.choices, default=GameStatus.CREATED, verbose_name=_("Status"))
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -107,9 +103,7 @@ class Game(TimeStampedModel):
         verbose_name=_("Am Zug"),
         related_name="+",
     )
-    max_participations = models.IntegerField(
-        verbose_name=_("Maximale Anzahl Teilnahmen"), default=4
-    )
+    max_participations = models.IntegerField(verbose_name=_("Maximale Anzahl Teilnahmen"), default=4)
     board_identifier = models.TextField(verbose_name=_("Spielbrett"))
 
     def join(self, player, character, balance=0):

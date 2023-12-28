@@ -26,9 +26,7 @@ class AuthenticationTestCase(APITestCase):
     def test_logs_in_user(self):
         client = APIClient()
 
-        hans = User.objects.create(
-            username="hans", first_name="Hans", last_name="Müller"
-        )
+        hans = User.objects.create(username="hans", first_name="Hans", last_name="Müller")
         hans.set_password("secret")
         hans.save()
 
@@ -64,9 +62,7 @@ class AuthenticationTestCase(APITestCase):
             response.json(),
         )
 
-        response = client.post(
-            reverse("login"), data={"username": "hans", "password": "wrong"}
-        )
+        response = client.post(reverse("login"), data={"username": "hans", "password": "wrong"})
         self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
         self.assertEqual(
             {
@@ -82,9 +78,7 @@ class AuthenticationTestCase(APITestCase):
             response.json(),
         )
 
-        response = client.post(
-            reverse("login"), data={"username": "hans", "password": "secret"}
-        )
+        response = client.post(reverse("login"), data={"username": "hans", "password": "secret"})
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(
             {

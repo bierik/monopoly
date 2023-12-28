@@ -13,7 +13,7 @@ from rest_framework.test import APITestCase
 from statemachine.exceptions import TransitionNotAllowed
 
 from core.device.models import Device
-from core.game.exceptions import FullLobbyException, MaxParticipationsExceeded
+from core.game.exceptions import MaxParticipationsExceeded
 from core.game.models import Character, Game, GameStatus, Participation
 from core.game.state_machine import GameMachine
 from core.testutils import create_player_client
@@ -28,9 +28,7 @@ def create_character(name, identifier):
     return Character.objects.create(
         name=name,
         identifier=identifier,
-        model=SimpleUploadedFile(
-            "model.gltf", DEFAULT_CHARACTER_MODEL, "application/json"
-        ),
+        model=SimpleUploadedFile("model.gltf", DEFAULT_CHARACTER_MODEL, "application/json"),
     )
 
 
@@ -122,9 +120,7 @@ class GameTestCase(APITestCase):
         character = create_character(name="Goblin", identifier="goblin")
         player = User.objects.create(username="hans")
         player_client = create_player_client(player)
-        game = Game.objects.create(
-            status=GameStatus.FINISHED, owner=User.objects.create(username="peter")
-        )
+        game = Game.objects.create(status=GameStatus.FINISHED, owner=User.objects.create(username="peter"))
         response = player_client.post(
             reverse("game-join", kwargs={"pk": game.pk}),
             data={"character": character.pk},
@@ -275,9 +271,7 @@ class GameTestCase(APITestCase):
         )
 
     @mock.patch("core.mqtt_client.mqtt_client.publish")
-    def test_notifies_when_a_game_has_created_using_the_device_content(
-        self, mqtt_publish
-    ):
+    def test_notifies_when_a_game_has_created_using_the_device_content(self, mqtt_publish):
         device = Device.objects.create(user_agent="user_agent")
         character = create_character(name="Goblin", identifier="goblin")
         player = User.objects.create(username="hans")
@@ -287,9 +281,7 @@ class GameTestCase(APITestCase):
             data={"character": character.pk},
             headers={"X-Device-Token": device.token},
         )
-        mqtt_publish.assert_called_with(
-            f"{device.token}/game/created", {"game_id": response.json()["pk"]}
-        )
+        mqtt_publish.assert_called_with(f"{device.token}/game/created", {"game_id": response.json()["pk"]})
 
     @mock.patch("core.mqtt_client.mqtt_client.publish")
     def test_notifies_when_a_game_receives_a_participation(self, mqtt_publish):
@@ -308,9 +300,7 @@ class GameTestCase(APITestCase):
         player_client = create_player_client(hans)
         response = player_client.get(reverse("game-lobby", kwargs={"pk": game.pk}))
         self.assertEqual(status.HTTP_200_OK, response.status_code)
-        self.assertEqual(
-            ["hans", "peter"], pydash.pluck(response.json(), "player.username")
-        )
+        self.assertEqual(["hans", "peter"], pydash.pluck(response.json(), "player.username"))
 
     def test_only_the_owner_can_start_the_game(self):
         hans = User.objects.create(username="hans")
@@ -385,25 +375,13 @@ class GameMaschineTestCase(APITestCase):
         self.bruno = User.objects.create(username="bruno")
 
     def test_restricts_turn_to_players_turn(self):
-        hans_machine = GameMachine(
-            self.game.join(
-                self.hans, create_character(name="Goblin", identifier="goblin")
-            )
-        )
-        bruno_machine = GameMachine(
-            self.game.join(
-                self.bruno, create_character(name="Pirate", identifier="pirate")
-            )
-        )
-        urs_machine = GameMachine(
-            self.game.join(self.urs, create_character(name="Male", identifier="male"))
-        )
+        hans_machine = GameMachine(self.game.join(self.hans, create_character(name="Goblin", identifier="goblin")))
+        bruno_machine = GameMachine(self.game.join(self.bruno, create_character(name="Pirate", identifier="pirate")))
+        urs_machine = GameMachine(self.game.join(self.urs, create_character(name="Male", identifier="male")))
 
         machines = [hans_machine, bruno_machine, urs_machine]
 
-        self.assertEqual(
-            ["idle", "idle", "idle"], pydash.pluck(machines, "current_state.id")
-        )
+        self.assertEqual(["idle", "idle", "idle"], pydash.pluck(machines, "current_state.id"))
 
         with self.assertRaises(TransitionNotAllowed):
             hans_machine.start_turn()
@@ -411,16 +389,10 @@ class GameMaschineTestCase(APITestCase):
         self.game.give_turn_to(self.hans)
 
         hans_machine.start_turn()
-        self.assertEqual(
-            ["turn_started", "idle", "idle"], pydash.pluck(machines, "current_state.id")
-        )
+        self.assertEqual(["turn_started", "idle", "idle"], pydash.pluck(machines, "current_state.id"))
 
     def test_hands_over_turn_to_next_player(self):
-        hans_machine = GameMachine(
-            self.game.join(
-                self.hans, create_character(name="Goblin", identifier="goblin")
-            )
-        )
+        hans_machine = GameMachine(self.game.join(self.hans, create_character(name="Goblin", identifier="goblin")))
         self.game.join(self.bruno, create_character(name="Goblin", identifier="goblin"))
         self.game.give_turn_to(self.hans)
         hans_machine.start_turn()
@@ -434,9 +406,7 @@ class GameMaschineTestCase(APITestCase):
     def test_moves_some_steps_on_the_board(self):
         random.seed(42)
 
-        participation = self.game.join(
-            self.hans, create_character(name="Goblin", identifier="goblin")
-        )
+        participation = self.game.join(self.hans, create_character(name="Goblin", identifier="goblin"))
         hans_machine = GameMachine(participation)
         self.game.give_turn_to(self.hans)
         hans_machine.start_turn()
@@ -470,9 +440,7 @@ class CharacterTestCase(TestCase):
             )
 
     def test_model_includes_necessary_animations(self):
-        with open(
-            Path(__file__).parent / "fixtures" / "Casual_Male.gltf", "rb"
-        ) as gltf:
+        with open(Path(__file__).parent / "fixtures" / "Casual_Male.gltf", "rb") as gltf:
             Character.objects.create(
                 name="male",
                 identifier="identifier",

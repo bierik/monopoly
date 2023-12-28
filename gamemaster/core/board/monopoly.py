@@ -54,9 +54,7 @@ monopoly.add_edge("aarau_rathausplatz", "chance3", direction=LEFT)
 monopoly.add_edge("chance3", "neuenburg_place_pury", direction=LEFT)
 monopoly.add_edge("neuenburg_place_pury", "thun_hauptgasse", direction=LEFT)
 monopoly.add_edge("thun_hauptgasse", "im_gefaengnis_nur_zu_besuch", direction=LEFT)
-monopoly.add_edge(
-    "im_gefaengnis_nur_zu_besuch", "basel_steinen_vorstadt", direction=TOP
-)
+monopoly.add_edge("im_gefaengnis_nur_zu_besuch", "basel_steinen_vorstadt", direction=TOP)
 monopoly.add_edge("basel_steinen_vorstadt", "elektrizitaetswerke", direction=TOP)
 monopoly.add_edge("elektrizitaetswerke", "solothurn_hauptgasse", direction=TOP)
 monopoly.add_edge("solothurn_hauptgasse", "lugano_via_nassa", direction=TOP)
@@ -64,12 +62,8 @@ monopoly.add_edge("lugano_via_nassa", "vereinigte_bergbahnen_ag", direction=TOP)
 monopoly.add_edge("vereinigte_bergbahnen_ag", "biel_nidaugasse", direction=TOP)
 monopoly.add_edge("biel_nidaugasse", "kanzlei3", direction=TOP)
 monopoly.add_edge("kanzlei3", "freiburg_bahnhofstrasse", direction=TOP)
-monopoly.add_edge(
-    "freiburg_bahnhofstrasse", "la_chaux_de_fonds_avenue_l_robert", direction=TOP
-)
-monopoly.add_edge(
-    "la_chaux_de_fonds_avenue_l_robert", "freier_parkplatz", direction=TOP
-)
+monopoly.add_edge("freiburg_bahnhofstrasse", "la_chaux_de_fonds_avenue_l_robert", direction=TOP)
+monopoly.add_edge("la_chaux_de_fonds_avenue_l_robert", "freier_parkplatz", direction=TOP)
 monopoly.add_edge("freier_parkplatz", "winterthur_bahnhofplatz", direction=RIGHT)
 monopoly.add_edge("winterthur_bahnhofplatz", "chance1", direction=RIGHT)
 monopoly.add_edge("chance1", "st_gallen_marktplatz", direction=RIGHT)

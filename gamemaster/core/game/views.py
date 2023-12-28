@@ -38,9 +38,7 @@ class GameView(SerializerActionMixin, GenericViewSet, mixins.RetrieveModelMixin)
     @action(methods=["GET"], detail=True)
     def lobby(self, request, pk=None):
         game = self.get_object()
-        return Response(
-            ParticipationLobbySerializer(game.participations.all(), many=True).data
-        )
+        return Response(ParticipationLobbySerializer(game.participations.all(), many=True).data)
 
     @action(methods=["POST"], detail=True, permission_classes=[IsGameOwnerPermission])
     def start(self, request, pk=None):
@@ -55,12 +53,8 @@ class GameView(SerializerActionMixin, GenericViewSet, mixins.RetrieveModelMixin)
             owner=request.user,
             max_participations=serializer.validated_data["max_participations"],
         )
-        mqtt_client.publish(
-            f"{request.device.token}/game/created", {"game_id": game.pk}
-        )
-        return Response(
-            data=GameDetailSerializer(game).data, status=status.HTTP_201_CREATED
-        )
+        mqtt_client.publish(f"{request.device.token}/game/created", {"game_id": game.pk})
+        return Response(data=GameDetailSerializer(game).data, status=status.HTTP_201_CREATED)
 
 
 class CharacterViewSet(GenericViewSet, mixins.ListModelMixin):

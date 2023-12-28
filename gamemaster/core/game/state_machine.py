@@ -11,9 +11,7 @@ class GameMachine(StateMachine):
     turn_ended = State("Turn ended", enter="hand_over_turn")
     lost = State("Lost", final=True)
 
-    start_turn = idle.to(turn_started, cond="is_players_turn") | turn_ended.to(
-        turn_started, cond="is_players_turn"
-    )
+    start_turn = idle.to(turn_started, cond="is_players_turn") | turn_ended.to(turn_started, cond="is_players_turn")
     roll_dice = turn_started.to(dice_rolled)
     move = dice_rolled.to(moving)
     end_turn = moving.to(turn_ended)

@@ -13,9 +13,5 @@ class DeviceViewSet(GenericViewSet):
     def register(self, request):
         if not request.device:
             device = Device.register(request.META.get("HTTP_USER_AGENT", ""))
-            return Response(
-                DeviceDetailSerializer(device).data, status=status.HTTP_201_CREATED
-            )
-        return Response(
-            DeviceDetailSerializer(request.device).data, status=status.HTTP_200_OK
-        )
+            return Response(DeviceDetailSerializer(device).data, status=status.HTTP_201_CREATED)
+        return Response(DeviceDetailSerializer(request.device).data, status=status.HTTP_200_OK)

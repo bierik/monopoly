@@ -83,9 +83,7 @@ class BoardTestCase(APITestCase):
 
         board_registry.register(board, "dummy")
 
-        response = self.client.get(
-            reverse("board-export", kwargs={"identifier": "dummy"})
-        )
+        response = self.client.get(reverse("board-export", kwargs={"identifier": "dummy"}))
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(
             ["A", "B", "C", "D", "E", "F", "G", "H"],
