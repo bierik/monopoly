@@ -12,10 +12,13 @@
 <script setup>
 const api = useApi()
 
+const router = useRouter()
+
 const username = ref('')
 const password = ref('')
 
-function login() {
-  api('/login/', { method: 'POST', body: { username: toValue(username), password: toValue(password) } })
+async function login() {
+  await api('/login/', { method: 'POST', body: { username: toValue(username), password: toValue(password) } })
+  router.replace({ name: 'index' })
 }
 </script>
