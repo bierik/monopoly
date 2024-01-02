@@ -7,7 +7,7 @@
 </template>
 <script setup>
 const loading = ref(true)
-const emit = defineEmits(['join', 'new'])
+const router = useRouter()
 const { color, width } = defineProps({
   color: {
     type: String,
@@ -58,9 +58,9 @@ function extractToken(path) {
 function detected(detectedCodes) {
   const path = new URL(detectedCodes[0].rawValue).pathname
   if (isJoin(path)) {
-    emit('join', extractGameId(path))
+    router.push({ name: 'game-id-join', params: { id: extractGameId(path) } })
   } else if (isNew(path)) {
-    emit('new', extractToken(path))
+    router.push({ name: 'game-create-token', params: { token: extractToken(path) } })
   }
 }
 </script>
