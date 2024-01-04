@@ -1,24 +1,15 @@
 <template>
-  <div class="container mx-auto h-screen flex flex-col justify-center items-center px-4">
-    <a :href="joinGameURL" class="mb-12">
-      <QrcodeVue
-        :size="200"
-        class="qr-code"
-        :value="joinGameURL"
-        background="transparent"
-        foreground="white"
-        render-as="svg"
-      />
-    </a>
-    {{ game.max_participations }}
-    <div class="grid gap-4 grid-cols-4 grid-rows-1">
-      <div class="card bg-slate-200 flex justify-center items-center" v-for="participation in lobby">
-        <GLTFViewer :path="participation.character.url" />
-        {{ participation.player.username }}
-      </div>
-      <div class="card bg-slate-400 p-12 flex justify-center items-center" v-for="_ in missingParticipations">
-        <span class="loading loading-ring loading-lg text-primary" />
-      </div>
+  <h1 class="text-2xl mb-4">Spiel beitreten</h1>
+  <a :href="joinGameURL" class="mb-12">
+    <QrcodeVue :size="200" class="qr-code" :value="joinGameURL" background="transparent" render-as="svg" />
+  </a>
+  <div class="flex gap-4">
+    <div class="card bg-slate-200 flex justify-center items-center w-48 h-48 p-8" v-for="participation in lobby">
+      <GLTFViewer :path="participation.character.url" />
+      <span class="text-xl">{{ participation.player.username }}</span>
+    </div>
+    <div class="card bg-slate-400 p-12 flex justify-center items-center" v-for="_ in missingParticipations">
+      <span class="loading loading-ring loading-lg text-primary" />
     </div>
   </div>
 </template>
@@ -27,6 +18,10 @@ import QrcodeVue from 'qrcode.vue'
 import { createJoinGameURL } from '@/url'
 import size from 'lodash/size'
 import { toValue } from 'vue'
+
+definePageMeta({
+  layout: 'full',
+})
 
 const api = useApi()
 const route = useRoute()
@@ -43,13 +38,3 @@ onMessage(joinGameMessage, () => {
   refreshLobby()
 })
 </script>
-<style>
-.qr-code > path + path {
-  fill: white;
-}
-@media (prefers-color-scheme: light) {
-  .qr-code > path + path {
-    fill: black;
-  }
-}
-</style>

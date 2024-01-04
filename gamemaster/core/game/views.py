@@ -10,6 +10,7 @@ from core.game.serializers import (
     CreateGameSerializer,
     GameDetailSerializer,
     JoinGameSerializer,
+    ParticipationDetailSerializer,
     ParticipationLobbySerializer,
 )
 from core.mqtt_client import mqtt_client
@@ -32,8 +33,8 @@ class GameView(SerializerActionMixin, GenericViewSet, mixins.RetrieveModelMixin)
         game = self.get_object()
         serializer = JoinGameSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        game.join(player=request.user, character=serializer.validated_data["character"])
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        participation = game.join(player=request.user, character=serializer.validated_data["character"])
+        return Response(ParticipationDetailSerializer(participation).data)
 
     @action(methods=["GET"], detail=True)
     def lobby(self, request, pk=None):

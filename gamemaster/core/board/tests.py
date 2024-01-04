@@ -4,61 +4,29 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from core.board import BOTTOM, CORNER, LEFT, RIGHT, SIDE, TOP
-from core.board.board import Board
+from core.board.models import Board, Tile, TileTypes
 from core.board.registry import UnknownBoardException, board_registry
 
 
 class BoardTestCase(APITestCase):
-    def test_raises_an_error_when_the_structure_does_not_exist(self):
-        with self.assertRaises(UnknownBoardException):
-            board_registry.board_for_identifier("unknown")
-
-    def test_gives_board_for_identifier(self):
-        self.assertIsNotNone(board_registry.board_for_identifier("monopoly"))
-
     def test_board_gives_successor_tile(self):
-        board = Board("A")
+        board = Board.objects.create(name="dummy")
+        a = Tile.objects.create(identifier="A", type=TileTypes.CORNER)
+        b = Tile.objects.create(identifier="B", type=TileTypes.CORNER)
+        c = Tile.objects.create(identifier="C", type=TileTypes.CORNER)
+        d = Tile.objects.create(identifier="D", type=TileTypes.CORNER)
 
-        board.add_node("A")
-        board.add_node("B")
-        board.add_node("C")
-        board.add_node("D")
+        a.set_successor(b)
+        b.set_successor(c)
+        c.set_successor(d)
+        d.set_successor(a)
 
-        board.add_edge("A", "B")
-        board.add_edge("B", "C")
-        board.add_edge("C", "D")
-        board.add_edge("D", "A")
+        board.tiles.add(a, b, c, d)
 
-        self.assertEqual("B", board.successor_of("A"))
-        self.assertEqual("C", board.successor_of("A", 2))
-        self.assertEqual("A", board.successor_of("A", 4))
-
-    def test_serialize_board(self):
-        board = Board("A")
-
-        board.add_node("A", type=CORNER)
-        board.add_node("B", type=SIDE)
-        board.add_node("C", type=CORNER)
-        board.add_node("D", type=SIDE)
-        board.add_node("E", type=CORNER)
-        board.add_node("F", type=SIDE)
-        board.add_node("G", type=CORNER)
-        board.add_node("H", type=SIDE)
-
-        board.add_edge("A", "B", direction=RIGHT)
-        board.add_edge("B", "C", direction=RIGHT)
-        board.add_edge("C", "D", direction=BOTTOM)
-        board.add_edge("D", "E", direction=BOTTOM)
-        board.add_edge("E", "F", direction=LEFT)
-        board.add_edge("F", "G", direction=LEFT)
-        board.add_edge("G", "H", direction=TOP)
-        board.add_edge("H", "A", direction=TOP)
-
-        json_data = board.to_json()
-        self.assertEqual(
-            ["A", "B", "C", "D", "E", "F", "G", "H"],
-            pydash.pluck(json_data["nodes"], "id"),
-        )
+        self.assertEqual(a, a.successors(0))
+        self.assertEqual(b, a.successors(1))
+        self.assertEqual(c, a.successors(2))
+        self.assertEqual(a, a.successors(4))
 
     def test_retrieves_board_over_api(self):
         board = Board("A")

@@ -8,12 +8,10 @@ import Board from '@/board'
 import { useWindowSize, useFetch } from '@vueuse/core'
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import * as YUKA from 'yuka'
-import mqtt from 'mqtt'
 
 const canvas = ref(null)
 const { width: windowWidth, height: windowHeight } = useWindowSize()
 const aspect = windowWidth.value / windowHeight.value
-const currentGame = ref(null)
 
 onMounted(async () => {
   const scene = new THREE.Scene()

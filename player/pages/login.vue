@@ -1,15 +1,17 @@
 <template>
-  <div class="container mx-auto flex items-center justify-center h-screen">
-    <form @submit.prevent="login">
-      <div class="card">
-        <input type="text" v-model="username" placeholder="Benutzername" class="input w-full mb-4 outline" />
-        <input type="password" v-model="password" placeholder="Passwort" class="input w-full mb-4 outline" />
-        <input type="submit" class="btn btn-primary" value="Anmelden" />
-      </div>
-    </form>
-  </div>
+  <form @submit.prevent="login">
+    <div class="card">
+      <input autofocus type="text" v-model="username" placeholder="Benutzername" class="input w-full mb-4 outline" />
+      <input type="password" v-model="password" placeholder="Passwort" class="input w-full mb-4 outline" />
+      <input type="submit" class="btn btn-primary" value="Anmelden" />
+    </div>
+  </form>
 </template>
 <script setup>
+definePageMeta({
+  layout: 'full',
+})
+
 const api = useApi()
 
 const router = useRouter()

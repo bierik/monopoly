@@ -80,7 +80,7 @@ class GameTestCase(APITestCase):
             reverse("game-join", kwargs={"pk": game.pk}),
             data={"character": character.pk},
         )
-        self.assertEqual(status.HTTP_204_NO_CONTENT, response.status_code)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(
             [GameStatus.CREATED],
             list(Game.objects.values_list("status", flat=True)),

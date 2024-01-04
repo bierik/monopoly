@@ -17,7 +17,7 @@ class GameDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Game
-        fields = ["pk", "status", "status_display", "max_participations"]
+        fields = ["pk", "status", "status_display", "max_participations", "owner_id"]
 
 
 class CharacterDetailSerializer(serializers.ModelSerializer):
@@ -35,3 +35,9 @@ class ParticipationLobbySerializer(serializers.ModelSerializer):
     class Meta:
         model = Participation
         fields = ["pk", "player", "character"]
+
+
+class ParticipationDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Participation
+        fields = ["pk"]

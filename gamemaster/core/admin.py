@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin
 
 from core.authentication.models import Player
 from core.device.models import Device
-from core.game.models import Character, Game
+from core.game.models import Character, Game, Participation
 
 
 @admin.register(Player)
@@ -23,4 +23,9 @@ class DeviceAdmin(admin.ModelAdmin):
 
 @admin.register(Game)
 class GameAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Participation)
+class ParticipationAdmin(admin.ModelAdmin):
     pass

@@ -7,4 +7,7 @@ module.exports = {
     `/plugins/**/*.{js,ts}`,
     `/app.{js,ts,vue}`,
   ],
+  daisyui: {
+    themes: ['nord'],
+  },
 }

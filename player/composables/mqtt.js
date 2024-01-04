@@ -8,8 +8,6 @@ client.on('message', (topic, message) => {
   handlers.forEach((handler) => handler(JSON.parse(message.toString())))
 })
 
-await client.subscribeAsync('+/game/created')
-await client.subscribeAsync('game/+/joined')
 await client.subscribeAsync('game/+/started')
 
 export const useSubscribe = () => (topic) => {

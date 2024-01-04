@@ -3,10 +3,10 @@
     <slot />
   </div>
   <div class="btm-nav">
-    <nuxt-link class="text-primary" active-class="active" :to="{ name: 'index' }">
+    <nuxt-link class="text-primary" active-class="active" :to="{ name: 'participation-id-play' }">
       <Icon name="material-symbols-light:play-arrow-rounded" size="40" />
     </nuxt-link>
-    <nuxt-link class="text-primary" active-class="active" :to="{ name: 'properties' }">
+    <nuxt-link class="text-primary" active-class="active" :to="{ name: 'participation-id-properties' }">
       <Icon name="material-symbols-light:house-outline-rounded" size="40" />
     </nuxt-link>
     <nuxt-link class="text-primary" active-class="active" :to="{ name: 'account' }">

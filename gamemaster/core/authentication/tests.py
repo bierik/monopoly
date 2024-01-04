@@ -80,15 +80,7 @@ class AuthenticationTestCase(APITestCase):
 
         response = client.post(reverse("login"), data={"username": "hans", "password": "secret"})
         self.assertEqual(status.HTTP_200_OK, response.status_code)
-        self.assertEqual(
-            {
-                "first_name": "Hans",
-                "full_name": "Hans Müller",
-                "last_name": "Müller",
-                "username": "hans",
-            },
-            response.json(),
-        )
+        self.assertEqual("hans", response.json()["username"])
 
     def test_logout(self):
         client = APIClient()
