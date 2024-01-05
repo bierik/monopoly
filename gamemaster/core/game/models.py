@@ -1,5 +1,3 @@
-from functools import cached_property
-
 import pydash
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -10,7 +8,6 @@ from django_extensions.db.models import TimeStampedModel
 from ordered_model.models import OrderedModel
 from pygltflib import GLTF2
 
-from core.board.registry import board_registry
 from core.game.exceptions import (
     AlreadyParticipantException,
     GameStartException,
@@ -104,7 +101,7 @@ class Game(TimeStampedModel):
         related_name="+",
     )
     max_participations = models.IntegerField(verbose_name=_("Maximale Anzahl Teilnahmen"), default=4)
-    board_identifier = models.TextField(verbose_name=_("Spielbrett"))
+    board = models.ForeignKey("Board", verbose_name=_("Spielbrett"), on_delete=models.CASCADE)
 
     def join(self, player, character, balance=0):
         if self.participations.count() == self.max_participations:
@@ -120,6 +117,7 @@ class Game(TimeStampedModel):
             player=player,
             character=character,
             balance=balance,
+            current_tile=self.board.tiles.first(),
         )
         mqtt_client.publish(f"game/{self.pk}/joined", {"game_id": self.pk})
         return participation
@@ -129,10 +127,6 @@ class Game(TimeStampedModel):
         if not self.current_turn:
             return self.participations.first().player
         return self.participations.get(player=self.current_turn).next().player
-
-    @cached_property
-    def board(self):
-        return board_registry.board_for_identifier(self.board_identifier)
 
     def give_turn_to(self, player):
         self.current_turn = player
@@ -176,10 +170,10 @@ class Participation(OrderedModel):
         verbose_name=_("Spielfigur"),
         related_name="participations",
     )
-    current_tile = models.TextField(
+    current_tile = models.ForeignKey(
+        "Tile",
         verbose_name=_("Momentanes Spielfeld"),
-        default="start",
-        help_text=_("Muss einem Spielfeld auf dem Board entsprechen."),
+        on_delete=models.CASCADE,
     )
     balance = models.FloatField(verbose_name=_("Saldo"))
 
@@ -196,5 +190,5 @@ class Participation(OrderedModel):
         return self.game.current_turn == self.player
 
     def move(self, steps):
-        self.current_tile = self.game.board.successor_of(self.current_tile, steps)
+        self.current_tile = self.current_tile.successor(steps)
         self.save(update_fields=["current_tile"])

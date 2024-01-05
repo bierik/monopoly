@@ -12,6 +12,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from statemachine.exceptions import TransitionNotAllowed
 
+from core.board.monopoly import create as create_monopoly_board
 from core.device.models import Device
 from core.game.exceptions import MaxParticipationsExceeded
 from core.game.models import Character, Game, GameStatus, Participation
@@ -33,6 +34,11 @@ def create_character(name, identifier):
 
 
 class GameTestCase(APITestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.board = create_monopoly_board()
+
     def test_creates_game(self):
         device = Device.objects.create(user_agent="user_agent")
         character = create_character(name="Goblin", identifier="goblin")
@@ -53,7 +59,7 @@ class GameTestCase(APITestCase):
     def test_joining_requires_a_character(self):
         player = User.objects.create(username="hans")
         player_client = create_player_client(player)
-        game = Game.objects.create(owner=player)
+        game = Game.objects.create(owner=player, board=self.board)
         response = player_client.post(reverse("game-join", kwargs={"pk": game.pk}))
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
         self.assertEqual(
@@ -74,7 +80,7 @@ class GameTestCase(APITestCase):
         character = create_character(name="Goblin", identifier="goblin")
         player = User.objects.create(username="hans")
         player_client = create_player_client(player)
-        game = Game.objects.create(owner=User.objects.create(username="peter"))
+        game = Game.objects.create(owner=User.objects.create(username="peter"), board=self.board)
 
         response = player_client.post(
             reverse("game-join", kwargs={"pk": game.pk}),
@@ -94,7 +100,7 @@ class GameTestCase(APITestCase):
         character = create_character(name="Goblin", identifier="goblin")
         player = User.objects.create(username="hans")
         player_client = create_player_client(player)
-        game = Game.objects.create(owner=User.objects.create(username="peter"))
+        game = Game.objects.create(owner=User.objects.create(username="peter"), board=self.board)
         game.join(player, character)
 
         response = player_client.post(
@@ -120,7 +126,7 @@ class GameTestCase(APITestCase):
         character = create_character(name="Goblin", identifier="goblin")
         player = User.objects.create(username="hans")
         player_client = create_player_client(player)
-        game = Game.objects.create(status=GameStatus.FINISHED, owner=User.objects.create(username="peter"))
+        game = Game.objects.create(status=GameStatus.FINISHED, owner=User.objects.create(username="peter"), board=self.board)
         response = player_client.post(
             reverse("game-join", kwargs={"pk": game.pk}),
             data={"character": character.pk},
@@ -146,7 +152,7 @@ class GameTestCase(APITestCase):
         hans_client = create_player_client(hans)
         peter = User.objects.create(username="peter")
         peter_client = create_player_client(peter)
-        game = Game.objects.create(owner=User.objects.create(username="urs"))
+        game = Game.objects.create(owner=User.objects.create(username="urs"), board=self.board)
         hans_client.post(
             reverse("game-join", kwargs={"pk": game.pk}),
             data={"character": character.pk},
@@ -192,7 +198,7 @@ class GameTestCase(APITestCase):
         peter = User.objects.create(username="peter")
         urs = User.objects.create(username="urs")
 
-        game = Game.objects.create(owner=hans, max_participations=2)
+        game = Game.objects.create(owner=hans, max_participations=2, board=self.board)
         game.join(hans, create_character(name="Goblin", identifier="goblin"))
         game.join(peter, create_character(name="Pirate", identifier="pirate"))
         with self.assertRaises(MaxParticipationsExceeded):
@@ -203,7 +209,7 @@ class GameTestCase(APITestCase):
         peter = User.objects.create(username="peter")
         urs = User.objects.create(username="urs")
         bruno = User.objects.create(username="bruno")
-        game = Game.objects.create(owner=hans)
+        game = Game.objects.create(owner=hans, board=self.board)
 
         game.join(hans, create_character(name="Goblin", identifier="goblin"))
         game.join(peter, create_character(name="Pirate", identifier="pirate"))
@@ -227,7 +233,7 @@ class GameTestCase(APITestCase):
         peter = User.objects.create(username="peter")
         urs = User.objects.create(username="urs")
         bruno = User.objects.create(username="bruno")
-        game = Game.objects.create(owner=hans)
+        game = Game.objects.create(owner=hans, board=self.board)
 
         participations = [
             game.join(hans, create_character(name="Goblin", identifier="goblin")),
@@ -286,14 +292,14 @@ class GameTestCase(APITestCase):
     @mock.patch("core.mqtt_client.mqtt_client.publish")
     def test_notifies_when_a_game_receives_a_participation(self, mqtt_publish):
         hans = User.objects.create(username="hans")
-        game = Game.objects.create(owner=hans)
+        game = Game.objects.create(owner=hans, board=self.board)
         game.join(hans, create_character(name="Goblin", identifier="goblin"))
         mqtt_publish.assert_called_with(f"game/{game.pk}/joined", {"game_id": game.pk})
 
     def test_lists_participations_for_a_game_lobby(self):
         hans = User.objects.create(username="hans")
         peter = User.objects.create(username="peter")
-        game = Game.objects.create(owner=hans)
+        game = Game.objects.create(owner=hans, board=self.board)
         game.join(hans, create_character(name="Goblin", identifier="goblin"))
         game.join(peter, create_character(name="Male", identifier="male"))
 
@@ -305,7 +311,7 @@ class GameTestCase(APITestCase):
     def test_only_the_owner_can_start_the_game(self):
         hans = User.objects.create(username="hans")
         peter = User.objects.create(username="peter")
-        game = Game.objects.create(owner=hans)
+        game = Game.objects.create(owner=hans, board=self.board)
 
         client = create_player_client(peter)
         response = client.post(reverse("game-start", kwargs={"pk": game.pk}))
@@ -313,7 +319,7 @@ class GameTestCase(APITestCase):
 
     def test_reject_game_start_until_all_participants_have_joined(self):
         hans = User.objects.create(username="hans")
-        game = Game.objects.create(owner=hans, max_participations=2)
+        game = Game.objects.create(owner=hans, max_participations=2, board=self.board)
         game.join(hans, create_character(name="Goblin", identifier="goblin"))
 
         client = create_player_client(hans)
@@ -335,7 +341,7 @@ class GameTestCase(APITestCase):
 
     def test_can_only_start_a_created_or_paused_game(self):
         hans = User.objects.create(username="hans")
-        game = Game.objects.create(owner=hans, max_participations=1)
+        game = Game.objects.create(owner=hans, max_participations=1, board=self.board)
         game.join(hans, create_character(name="Goblin", identifier="goblin"))
         game.status = GameStatus.FINISHED
         game.save(update_fields=["status"])
@@ -360,17 +366,22 @@ class GameTestCase(APITestCase):
     @mock.patch("core.mqtt_client.mqtt_client.publish")
     def test_notifies_when_a_game_has_started(self, mqtt_publish):
         hans = User.objects.create(username="hans")
-        game = Game.objects.create(owner=hans, max_participations=1)
+        game = Game.objects.create(owner=hans, max_participations=1, board=self.board)
         game.join(hans, create_character(name="Goblin", identifier="goblin"))
         game.start()
         mqtt_publish.assert_called_with(f"game/{game.pk}/started", {"game_id": game.pk})
 
 
 class GameMaschineTestCase(APITestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.board = create_monopoly_board()
+
     def setUp(self):
         super().setUp()
         self.hans = User.objects.create(username="hans")
-        self.game = Game.objects.create(owner=self.hans, board_identifier="monopoly")
+        self.game = Game.objects.create(owner=self.hans, board=self.board)
         self.urs = User.objects.create(username="urs")
         self.bruno = User.objects.create(username="bruno")
 
@@ -412,11 +423,11 @@ class GameMaschineTestCase(APITestCase):
         hans_machine.start_turn()
         hans_machine.roll_dice()
 
-        self.assertEqual("start", participation.current_tile)
+        self.assertEqual(self.board.tiles.get(identifier="start"), participation.current_tile)
 
         hans_machine.move()
         participation.refresh_from_db(fields=["current_tile"])
-        self.assertEqual("chance3", participation.current_tile)
+        self.assertEqual(self.board.tiles.get(identifier="chance3"), participation.current_tile)
 
 
 @override_settings(VALIDATE_GLTF=True)

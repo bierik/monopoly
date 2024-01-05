@@ -25,16 +25,21 @@ definePageMeta({
 
 const api = useApi()
 const route = useRoute()
+const router = useRouter()
 const onMessage = useOnMessage()
 
 const { data: lobby, refresh: refreshLobby } = await useAsyncData('lobby', () => api(`/game/${route.params.id}/lobby/`))
 const { data: game } = await useAsyncData('game', () => api(`/game/${route.params.id}/`))
 
 const joinGameMessage = computed(() => `game/${route.params.id}/joined`)
+const gameStartedMessage = computed(() => `game/${route.params.id}/started`)
 const joinGameURL = computed(() => createJoinGameURL(route.params.id))
 const missingParticipations = computed(() => toValue(game).max_participations - size(toValue(lobby)))
 
 onMessage(joinGameMessage, () => {
   refreshLobby()
+})
+onMessage(gameStartedMessage, () => {
+  router.replace({ name: 'game-id', params: { id: route.params.id } })
 })
 </script>

@@ -1,12 +1,11 @@
 from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
-from rest_framework.views import APIView
+from rest_framework.viewsets import GenericViewSet, mixins
 
-from core.board.registry import board_registry
+from core.board.models import Board
+from core.board.serializers import BoardSerializer
 
 
-class BoardExportView(APIView):
+class BoardViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     permission_classes = [AllowAny]
-
-    def get(self, request, identifier, format=None):
-        return Response(board_registry.board_for_identifier(identifier).to_json())
+    serializer_class = BoardSerializer
+    queryset = Board.objects.all()

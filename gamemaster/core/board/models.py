@@ -1,7 +1,7 @@
-from functools import cached_property
-
+from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.utils.translation import gettext_lazy as _
+from ordered_model.models import OrderedModel
 
 
 class Board(models.Model):
@@ -10,13 +10,6 @@ class Board(models.Model):
         verbose_name_plural = "Spielbretter"
 
     name = models.TextField(verbose_name="Name")
-    root_tile = models.ForeignKey(
-        "Tile", verbose_name="Startfeld", on_delete=models.SET_NULL, related_name="+", null=True, blank=True
-    )
-
-    def set_root_tile(self, tile):
-        self.root_tile = tile
-        self.save(update_fields=["root_tile"])
 
 
 class TileTypes(models.TextChoices):
@@ -24,31 +17,41 @@ class TileTypes(models.TextChoices):
     CORNER = "CORNER", _("Ecke")
 
 
-class Tile(models.Model):
+class Direction(models.TextChoices):
+    RIGHT = "RIGHT", _("Nach rechts")
+    BOTTOM = "BOTTOM", _("Nach unten")
+    LEFT = "LEFT", _("Nach links")
+    TOP = "TOP", _("Nach oben")
+
+
+class Tile(OrderedModel):
     class Meta:
         verbose_name = "Feld"
         verbose_name_plural = "Felder"
+        ordering = ["order"]
 
     identifier = models.TextField(verbose_name="Identifier")
     type = models.TextField(verbose_name="Typ", choices=TileTypes.choices)
+    direction = models.TextField(verbose_name="Richtung", choices=Direction.choices)
+    texture = models.FileField(
+        verbose_name="Textur",
+        upload_to="textures",
+        validators=[FileExtensionValidator(["webp"])],
+        null=True,
+        blank=True,
+    )
 
     board = models.ForeignKey(
         "Board", verbose_name="Spielbrett", on_delete=models.SET_NULL, related_name="tiles", null=True, blank=True
     )
-    successor = models.ForeignKey(
-        "Tile", verbose_name="Nachfolger", on_delete=models.SET_NULL, related_name="predecessor", null=True, blank=True
-    )
 
-    def set_successor(self, tile):
-        self.successor = tile
-        self.save(update_fields=["successor"])
+    def next(self):
+        next = super().next()
+        return next if next else self.__class__.objects.first()
 
-    # def to_json(self):
-    #     node_link_data = pick(json_graph.node_link_data(self), "nodes", "links")
-    #     node_link_data["root_node"] = self.root_node
-    #     return node_link_data
-
-    def successors(self, num_successors):
+    def successor(self, num_successors):
+        num_successors = num_successors % self.board.tiles.count()
         if num_successors == 0:
             return self
-        return self.successor.successors(num_successors - 1)
+
+        return self.get_ordering_queryset().above_instance(self)[num_successors - 1]

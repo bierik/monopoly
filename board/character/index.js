@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import * as YUKA from 'yuka'
-import { modelForName } from '@/models'
+import loadModel from '@/character/models'
 import { actionsFromMixer } from '@/character/animations'
 import { STATES, IdleState, WalkState, RunState } from '@/character/states'
 
@@ -112,9 +112,10 @@ export default class Character extends YUKA.Vehicle {
     this.position.copy(freeSpot)
   }
 
-  static async forName({ name, scale = 1, board, target }) {
-    const { scene: model, animations } = await modelForName(name)
-    model.animations = animations
-    return new Character({ model, scale, board, target })
+  static async fromModel({ model, scale = 1, board, target }) {
+    const { scene, animations } = await loadModel(model)
+
+    scene.animations = animations
+    return new Character({ model: scene, scale, board, target })
   }
 }

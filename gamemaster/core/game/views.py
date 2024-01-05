@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins
 
+from core.board.monopoly import create as create_monopoly_board
 from core.game.models import Character, Game
 from core.game.permissions import IsGameOwnerPermission
 from core.game.serializers import (
@@ -11,7 +12,6 @@ from core.game.serializers import (
     GameDetailSerializer,
     JoinGameSerializer,
     ParticipationDetailSerializer,
-    ParticipationLobbySerializer,
 )
 from core.mqtt_client import mqtt_client
 from core.views import SerializerActionMixin
@@ -39,7 +39,7 @@ class GameView(SerializerActionMixin, GenericViewSet, mixins.RetrieveModelMixin)
     @action(methods=["GET"], detail=True)
     def lobby(self, request, pk=None):
         game = self.get_object()
-        return Response(ParticipationLobbySerializer(game.participations.all(), many=True).data)
+        return Response(ParticipationDetailSerializer(game.participations.all(), many=True).data)
 
     @action(methods=["POST"], detail=True, permission_classes=[IsGameOwnerPermission])
     def start(self, request, pk=None):
@@ -53,6 +53,7 @@ class GameView(SerializerActionMixin, GenericViewSet, mixins.RetrieveModelMixin)
         game = Game.objects.create(
             owner=request.user,
             max_participations=serializer.validated_data["max_participations"],
+            board=create_monopoly_board(),
         )
         mqtt_client.publish(f"{request.device.token}/game/created", {"game_id": game.pk})
         return Response(data=GameDetailSerializer(game).data, status=status.HTTP_201_CREATED)

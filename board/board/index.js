@@ -1,49 +1,42 @@
 import * as THREE from 'three'
-import { textureForName } from '@/textures'
 import CornerTile from '@/board/corner_tile'
 import SideTile from '@/board/side_tile'
 import * as YUKA from 'yuka'
 import Character from '@/character'
-import Graph from '@/board/graph'
+import first from 'lodash/first'
+import drop from 'lodash/drop'
+import take from 'lodash/take'
+import loadTexture from '@/board/texture'
 
 const TILE_TYPE = {
-  0: CornerTile,
-  1: SideTile,
+  CORNER: CornerTile,
+  SIDE: SideTile,
 }
 
 export default class Board {
-  constructor(graph, scene) {
+  constructor(structure, scene) {
     this.model = new THREE.Object3D()
     this.characterManager = new YUKA.EntityManager()
-    this.graph = graph
     this.scene = scene
-    this.createdTiles = {}
-    this.buildBoard()
+    this.buildBoard(structure)
   }
 
-  buildBoard() {
-    this.graph.traverse(({ node, successor, edge }) => {
-      const nodeTile = this.createTile(node.id, node.type)
-      const successorTile = this.createTile(successor.id, successor.type)
-      nodeTile.placeNextTo(successorTile, edge.direction)
-    })
+  buildBoard(structure) {
+    const tiles = structure.value.tiles
+    const rootTile = this.createTile(first(tiles))
+    drop(tiles, 1).reduce((bla, successor) => {
+      const successorTile = this.createTile(successor)
+      bla.placeNextTo(successorTile, successor.direction)
+      return successorTile
+    }, rootTile)
   }
 
-  createTile(id, type) {
-    if (id in this.createdTiles) {
-      return this.createdTiles[id]
-    }
-    const tile = new TILE_TYPE[type]()
-    tile.material.map = textureForName(id)
-    tile.name = id
+  createTile(bla) {
+    const tile = new TILE_TYPE[bla.type]()
+    tile.material.map = loadTexture(bla.texture)
+    tile.name = bla.identifier
     this.model.add(tile)
-    this.createdTiles[id] = tile
     return tile
-  }
-
-  static fromNodeLinkGraph(nodeLinkGraph, scene) {
-    const graph = Graph.fromNodeLinkGraph(nodeLinkGraph)
-    return new Board(graph, scene)
   }
 
   tileForName(tile) {
@@ -54,9 +47,9 @@ export default class Board {
     this.characterManager.update(delta)
   }
 
-  async addCharacter({ name, target = this.graph.rootNode, scale = 1 }) {
-    const character = await Character.forName({
-      name,
+  async addCharacter({ model, target, scale = 1 }) {
+    const character = await Character.fromModel({
+      model,
       board: this,
       target,
       scale,

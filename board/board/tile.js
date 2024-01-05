@@ -2,10 +2,10 @@ import * as THREE from 'three'
 import * as YUKA from 'yuka'
 
 const ATTACH_TO = {
-  RIGHT: 'right',
-  BOTTOM: 'bottom',
-  LEFT: 'left',
-  TOP: 'top',
+  RIGHT: 'RIGHT',
+  BOTTOM: 'BOTTOM',
+  LEFT: 'LEFT',
+  TOP: 'TOP',
 }
 
 export default class Tile extends THREE.Mesh {

@@ -4,6 +4,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient, APITestCase
 
+from core.board.models import Board
 from core.game.models import Game
 from core.testutils import create_player_client
 
@@ -15,8 +16,8 @@ class AuthenticationTestCase(APITestCase):
         hans = User.objects.create(username="hans")
         peter = User.objects.create(username="peter")
 
-        hans_game = Game.objects.create(owner=hans)
-        Game.objects.create(owner=peter)
+        hans_game = Game.objects.create(owner=hans, board=Board.objects.create(name="dummy"))
+        Game.objects.create(owner=peter, board=Board.objects.create(name="dummy"))
 
         player_client = create_player_client(hans)
         response = player_client.get(reverse("authentication-games"))
