@@ -8,7 +8,6 @@ definePageMeta({
 })
 const route = useRoute()
 const router = useRouter()
-const api = useApi()
 const user = useUserStore()
 const onMessage = useOnMessage()
 

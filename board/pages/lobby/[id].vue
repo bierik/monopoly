@@ -8,7 +8,7 @@
       <GLTFViewer :path="participation.character.url" />
       <span class="text-xl">{{ participation.player.username }}</span>
     </div>
-    <div class="card bg-slate-400 p-12 flex justify-center items-center" v-for="_ in missingParticipations">
+    <div class="card bg-slate-400 p-12 flex justify-center items-center w-48 h-48" v-for="_ in missingParticipations">
       <span class="loading loading-ring loading-lg text-primary" />
     </div>
   </div>
@@ -23,7 +23,6 @@ definePageMeta({
   layout: 'full',
 })
 
-const api = useApi()
 const route = useRoute()
 const router = useRouter()
 const onMessage = useOnMessage()

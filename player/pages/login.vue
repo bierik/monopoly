@@ -12,15 +12,20 @@ definePageMeta({
   layout: 'full',
 })
 
-const api = useApi()
-
 const router = useRouter()
+const route = useRoute()
+
+const next = route.query.next
 
 const username = ref('')
 const password = ref('')
 
 async function login() {
   await api('/login/', { method: 'POST', body: { username: toValue(username), password: toValue(password) } })
-  router.replace({ name: 'index' })
+  if (!next) {
+    router.replace({ name: 'index' })
+  } else {
+    router.replace(next)
+  }
 }
 </script>

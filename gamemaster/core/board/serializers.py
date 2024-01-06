@@ -11,9 +11,15 @@ class TileSerializer(serializers.ModelSerializer):
         fields = ["identifier", "type", "direction", "texture"]
 
 
-class BoardSerializer(serializers.ModelSerializer):
+class BoardDetailSerializer(serializers.ModelSerializer):
     tiles = TileSerializer(many=True)
 
     class Meta:
         model = Board
         fields = ["pk", "name", "tiles"]
+
+
+class BoardListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Board
+        fields = ["pk", "name"]

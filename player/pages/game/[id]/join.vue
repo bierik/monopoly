@@ -1,11 +1,19 @@
 <template>
   <form @submit.prevent="joinGame" class="h-full w-full">
-    <div class="grid grid-cols-2 gap-4">
-      <div
-        class="card aspect-square active:scale-95 duration-300 transition-all overflow-hidden"
-        :class="character.pk === selectedCharacter ? 'bg-primary' : 'bg-slate-300'"
+    <div class="grid grid-cols-3 gap-4">
+      <label
         v-for="character in characters"
+        class="pb-4 card aspect-square active:scale-95 duration-300 transition-all overflow-hidden flex items-center justify-center"
+        :for="`character-${character.pk}`"
+        :class="character.pk === selectedCharacter ? 'bg-primary' : 'bg-slate-300'"
       >
+        <Suspense>
+          <GLTFViewer :path="character.url" />
+          <template #fallback>
+            <span class="loading loading-ring loading-lg" />
+          </template>
+        </Suspense>
+        <span class="font-bold">{{ character.name }}</span>
         <input
           class="hidden"
           type="radio"
@@ -13,19 +21,9 @@
           :value="character.pk"
           v-model="selectedCharacter"
         />
-        <label class="flex flex-grow items-center justify-center" :for="`character-${character.pk}`">
-          <Suspense>
-            <GLTFViewer :path="character.url" />
-            <template #fallback>
-              <span class="loading loading-ring loading-lg" />
-            </template>
-          </Suspense>
-        </label>
-      </div>
+      </label>
     </div>
-    <footer class="footer">
-      <button class="btn btn-primary" type="submit">Auswählen</button>
-    </footer>
+    <button class="btn btn-primary fixed bottom-4 right-4 drop-shadow-xl" type="submit">Auswählen</button>
   </form>
 </template>
 <script setup>
@@ -35,7 +33,6 @@ definePageMeta({
 
 const route = useRoute()
 const router = useRouter()
-const api = useApi()
 
 const { data: characters } = await useAsyncData('characters', () => api('/character/'))
 

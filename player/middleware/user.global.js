@@ -7,7 +7,7 @@ export default defineNuxtRouteMiddleware(async (from, to) => {
     await user.fetch()
   } catch (error) {
     if (error.status === 403) {
-      return navigateTo({ name: 'login' })
+      return navigateTo({ name: 'login', query: { next: from.fullPath } })
     }
   }
 })

@@ -9,8 +9,4 @@ const headers = {
 if (deviceToken) {
   headers['X-Device-Token'] = deviceToken
 }
-const api = $fetch.create({ baseURL: '/api', headers })
-
-export default function () {
-  return api
-}
+export default $fetch.create({ baseURL: '/api', headers })

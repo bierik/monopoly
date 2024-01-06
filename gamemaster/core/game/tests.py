@@ -12,7 +12,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from statemachine.exceptions import TransitionNotAllowed
 
-from core.board.monopoly import create as create_monopoly_board
+from core.board.monopoly_swiss import create as create_monopoly_board
 from core.device.models import Device
 from core.game.exceptions import MaxParticipationsExceeded
 from core.game.models import Character, Game, GameStatus, Participation
@@ -47,7 +47,7 @@ class GameTestCase(APITestCase):
         self.assertEqual(0, Game.objects.count())
         response = player_client.post(
             reverse("game-list"),
-            data={"character": character.pk},
+            data={"board": self.board.pk},
             headers={"X-Device-Token": device.token},
         )
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
@@ -184,7 +184,7 @@ class GameTestCase(APITestCase):
         self.assertEqual(0, Game.objects.count())
         response = player_client.post(
             reverse("game-list"),
-            data={"character": character.pk},
+            data={"board": self.board.pk},
             headers={"X-Device-Token": device.token},
         )
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
@@ -262,12 +262,11 @@ class GameTestCase(APITestCase):
     def test_configure_max_participations(self):
         device = Device.objects.create(user_agent="user_agent")
         hans = User.objects.create(username="hans")
-        character = create_character(name="Goblin", identifier="goblin")
 
         hans_client = create_player_client(hans)
         response = hans_client.post(
             reverse("game-list"),
-            data={"character": character.pk, "max_participations": 2},
+            data={"board": self.board.pk, "max_participations": 2},
             headers={"X-Device-Token": device.token},
         )
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
@@ -276,15 +275,30 @@ class GameTestCase(APITestCase):
             list(Game.objects.values_list("max_participations", flat=True)),
         )
 
+    def test_configure_board(self):
+        device = Device.objects.create(user_agent="user_agent")
+        hans = User.objects.create(username="hans")
+
+        hans_client = create_player_client(hans)
+        response = hans_client.post(
+            reverse("game-list"),
+            data={"board": self.board.pk, "max_participations": 2},
+            headers={"X-Device-Token": device.token},
+        )
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertEqual(
+            [self.board.pk],
+            list(Game.objects.values_list("board_id", flat=True)),
+        )
+
     @mock.patch("core.mqtt_client.mqtt_client.publish")
     def test_notifies_when_a_game_has_created_using_the_device_content(self, mqtt_publish):
         device = Device.objects.create(user_agent="user_agent")
-        character = create_character(name="Goblin", identifier="goblin")
         player = User.objects.create(username="hans")
         player_client = create_player_client(player)
         response = player_client.post(
             reverse("game-list"),
-            data={"character": character.pk},
+            data={"board": self.board.pk},
             headers={"X-Device-Token": device.token},
         )
         mqtt_publish.assert_called_with(f"{device.token}/game/created", {"game_id": response.json()["pk"]})

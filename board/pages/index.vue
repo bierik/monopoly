@@ -14,7 +14,6 @@ definePageMeta({
 
 const router = useRouter()
 const onMessage = useOnMessage()
-const api = useApi()
 
 const { data } = await useAsyncData('register-device', () => api('/device/register/', { method: 'POST' }))
 useDeviceToken().value = toValue(data).token

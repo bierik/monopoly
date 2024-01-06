@@ -10,17 +10,17 @@ from core.game.models import Character, Game, Participation
 
 @admin.register(Player)
 class PlayerAdmin(UserAdmin):
-    pass
+    list_display = ["username", "get_full_name"]
 
 
 @admin.register(Character)
 class CharacterAdmin(admin.ModelAdmin):
-    pass
+    list_display = ["identifier", "name"]
 
 
 @admin.register(Device)
 class DeviceAdmin(admin.ModelAdmin):
-    pass
+    list_display = ["token", "user_agent"]
 
 
 @admin.register(Game)
@@ -47,3 +47,4 @@ class TileInline(OrderedTabularInline):
 @admin.register(Board)
 class BoardAdmin(OrderedInlineModelAdminMixin, admin.ModelAdmin):
     inlines = [TileInline]
+    list_display = ("name",)

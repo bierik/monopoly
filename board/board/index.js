@@ -5,8 +5,9 @@ import * as YUKA from 'yuka'
 import Character from '@/character'
 import first from 'lodash/first'
 import drop from 'lodash/drop'
-import take from 'lodash/take'
 import loadTexture from '@/board/texture'
+import findIndex from 'lodash/findIndex'
+import map from 'lodash/map'
 
 const TILE_TYPE = {
   CORNER: CornerTile,
@@ -18,17 +19,24 @@ export default class Board {
     this.model = new THREE.Object3D()
     this.characterManager = new YUKA.EntityManager()
     this.scene = scene
-    this.buildBoard(structure)
+    this.structure = structure
+    this.buildBoard()
   }
 
-  buildBoard(structure) {
-    const tiles = structure.value.tiles
+  buildBoard() {
+    const tiles = this.structure.tiles
     const rootTile = this.createTile(first(tiles))
     drop(tiles, 1).reduce((bla, successor) => {
       const successorTile = this.createTile(successor)
       bla.placeNextTo(successorTile, successor.direction)
       return successorTile
     }, rootTile)
+  }
+
+  buildPath(from, to) {
+    const startTile = findIndex(this.structure.tiles, { identifier: from })
+    const endTile = findIndex(this.structure.tiles, { identifier: to })
+    return map(this.structure.tiles.slice(startTile, endTile + 1), 'identifier')
   }
 
   createTile(bla) {

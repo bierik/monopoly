@@ -11,7 +11,6 @@ import * as YUKA from 'yuka'
 const canvas = ref(null)
 const { width: windowWidth, height: windowHeight } = useWindowSize()
 const aspect = windowWidth.value / windowHeight.value
-const api = useApi()
 const route = useRoute()
 const { data: game } = await useAsyncData('game', () => api(`/game/${route.params.id}/`))
 const { data: lobby } = await useAsyncData('lobby', () => api(`/game/${route.params.id}/lobby/`))
@@ -50,12 +49,14 @@ onMounted(async () => {
   const controls = new OrbitControls(camera, canvas.value)
   controls.update()
 
-  const board = new Board(boardStructure, scene)
+  const board = new Board(toValue(boardStructure), scene)
   scene.add(board.model)
 
-  lobby.value.forEach((participation) => {
-    board.addCharacter({ model: participation.character.url, target: 'start' })
-  })
+  const chars = await Promise.all(
+    lobby.value.map((participation) => board.addCharacter({ model: participation.character.url, target: 'start' })),
+  )
+
+  chars[0].goTo('elektrizitaetswerke')
 
   const clock = new YUKA.Time()
   renderer.setAnimationLoop(() => {

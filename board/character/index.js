@@ -57,7 +57,7 @@ export default class Character extends YUKA.Vehicle {
   }
 
   pathTo(target) {
-    const path = this.board.graph.buildPath(this.standsOn.name, target.name)
+    const path = this.board.buildPath(this.standsOn.name, target.name)
     const yukaPath = new YUKA.Path()
     path.forEach((node) => {
       yukaPath.add(this.board.tileForName(node).toYUKAVector())

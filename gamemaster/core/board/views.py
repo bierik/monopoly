@@ -2,10 +2,11 @@ from rest_framework.permissions import AllowAny
 from rest_framework.viewsets import GenericViewSet, mixins
 
 from core.board.models import Board
-from core.board.serializers import BoardSerializer
+from core.board.serializers import BoardDetailSerializer, BoardListSerializer
+from core.views import SerializerActionMixin
 
 
-class BoardViewSet(GenericViewSet, mixins.RetrieveModelMixin):
+class BoardViewSet(SerializerActionMixin, GenericViewSet, mixins.RetrieveModelMixin, mixins.ListModelMixin):
     permission_classes = [AllowAny]
-    serializer_class = BoardSerializer
     queryset = Board.objects.all()
+    serializer_action_classes = {"retrieve": BoardDetailSerializer, "list": BoardListSerializer}

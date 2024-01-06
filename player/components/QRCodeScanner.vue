@@ -6,6 +6,8 @@
   </QrcodeStream>
 </template>
 <script setup>
+import first from 'lodash/first'
+
 const loading = ref(true)
 const router = useRouter()
 const { color, width } = defineProps({
@@ -20,7 +22,7 @@ const { color, width } = defineProps({
 })
 
 function paintOutline(detectedCodes, ctx) {
-  const detectedCode = detectedCodes[0]
+  const detectedCode = first(detectedCodes)
   const [firstPoint, ...otherPoints] = detectedCode.cornerPoints
 
   ctx.strokeStyle = color
@@ -56,7 +58,7 @@ function extractToken(path) {
 }
 
 function detected(detectedCodes) {
-  const path = new URL(detectedCodes[0].rawValue).pathname
+  const path = new URL(first(detectedCodes).rawValue).pathname
   if (isJoin(path)) {
     router.push({ name: 'game-id-join', params: { id: extractGameId(path) } })
   } else if (isNew(path)) {
