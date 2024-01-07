@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins
 
-from core.game.models import Character, Game
+from core.game.models import Character, Game, Participation
 from core.game.permissions import IsGameOwnerPermission
 from core.game.serializers import (
     CharacterDetailSerializer,
@@ -46,6 +46,14 @@ class GameView(SerializerActionMixin, GenericViewSet, mixins.RetrieveModelMixin)
         game.start()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    @action(methods=["GET"], detail=True)
+    def participation(self, request, pk=None):
+        game = self.get_object()
+        try:
+            return Response(ParticipationDetailSerializer(game.participation_for_player(request.user)).data)
+        except Participation.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
     def create(self, request):
         serializer = CreateGameSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -60,3 +68,8 @@ class GameView(SerializerActionMixin, GenericViewSet, mixins.RetrieveModelMixin)
 class CharacterViewSet(GenericViewSet, mixins.ListModelMixin):
     queryset = Character.objects.all()
     serializer_class = CharacterDetailSerializer
+
+
+class ParticipationViewSet(GenericViewSet, mixins.RetrieveModelMixin):
+    queryset = Participation.objects.all()
+    serializer_class = ParticipationDetailSerializer

@@ -39,14 +39,13 @@ const { data: characters } = await useAsyncData('characters', () => api('/charac
 const selectedCharacter = ref()
 
 async function joinGame() {
-  const participation = await api(`/game/${route.params.id}/join/`, {
+  await api(`/game/${route.params.id}/join/`, {
     method: 'POST',
     body: { character: toValue(selectedCharacter) },
   })
   router.replace({
     name: 'game-id',
     params: { id: route.params.id },
-    query: { participation_id: toValue(participation).pk },
   })
 }
 </script>

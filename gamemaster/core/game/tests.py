@@ -14,7 +14,7 @@ from statemachine.exceptions import TransitionNotAllowed
 
 from core.board.monopoly_swiss import create as create_monopoly_board
 from core.device.models import Device
-from core.game.exceptions import MaxParticipationsExceeded
+from core.exceptions import MaxParticipationsExceeded
 from core.game.models import Character, Game, GameStatus, Participation
 from core.game.state_machine import GameMachine
 from core.testutils import create_player_client
@@ -384,6 +384,19 @@ class GameTestCase(APITestCase):
         game.join(hans, create_character(name="Goblin", identifier="goblin"))
         game.start()
         mqtt_publish.assert_called_with(f"game/{game.pk}/started", {"game_id": game.pk})
+
+    def test_get_participation_for_game_and_logged_in_player(self):
+        hans = User.objects.create(username="hans")
+        client = create_player_client(hans)
+        game = Game.objects.create(owner=hans, board=self.board)
+
+        response = client.get(reverse("game-participation", kwargs={"pk": game.pk}))
+        self.assertEqual(status.HTTP_404_NOT_FOUND, response.status_code)
+
+        participation = game.join(hans, create_character(name="Goblin", identifier="goblin"))
+        response = client.get(reverse("game-participation", kwargs={"pk": game.pk}))
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(participation.pk, response.json()["pk"])
 
 
 class GameMaschineTestCase(APITestCase):

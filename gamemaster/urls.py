@@ -7,7 +7,7 @@ from rest_framework.routers import DefaultRouter
 from core.authentication.views import AuthenticationViewSet, LoginView, LogoutView
 from core.board.views import BoardViewSet
 from core.device.views import DeviceViewSet
-from core.game.views import CharacterViewSet, GameView
+from core.game.views import CharacterViewSet, GameView, ParticipationViewSet
 from core.views import CSRFView
 
 router = DefaultRouter()
@@ -16,6 +16,7 @@ router.register(r"authentication", AuthenticationViewSet, basename="authenticati
 router.register(r"device", DeviceViewSet, basename="device")
 router.register(r"character", CharacterViewSet, basename="character")
 router.register(r"board", BoardViewSet, basename="board")
+router.register(r"participation", ParticipationViewSet, basename="participation")
 
 urlpatterns = [
     path("admin/", admin.site.urls),

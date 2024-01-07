@@ -8,7 +8,7 @@ from django_extensions.db.models import TimeStampedModel
 from ordered_model.models import OrderedModel
 from pygltflib import GLTF2
 
-from core.game.exceptions import (
+from core.exceptions import (
     AlreadyParticipantException,
     GameStartException,
     JoinStartedGameException,
@@ -71,6 +71,9 @@ class Character(models.Model):
         if settings.VALIDATE_GLTF:
             self.validate_gltf()
 
+    def __str__(self):
+        return self.name
+
 
 class GameManager(models.Manager):
     def owned(self, owner):
@@ -127,6 +130,9 @@ class Game(TimeStampedModel):
         if not self.current_turn:
             return self.participations.first().player
         return self.participations.get(player=self.current_turn).next().player
+
+    def participation_for_player(self, player):
+        return Participation.objects.get(game=self, player=player)
 
     def give_turn_to(self, player):
         self.current_turn = player

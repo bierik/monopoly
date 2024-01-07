@@ -25,12 +25,12 @@ class DeviceAdmin(admin.ModelAdmin):
 
 @admin.register(Game)
 class GameAdmin(admin.ModelAdmin):
-    pass
+    list_display = ["board", "owner"]
 
 
 @admin.register(Participation)
 class ParticipationAdmin(admin.ModelAdmin):
-    pass
+    list_display = ["game", "player", "character"]
 
 
 class TileInline(OrderedTabularInline):

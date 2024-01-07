@@ -11,6 +11,9 @@ class Board(models.Model):
 
     name = models.TextField(verbose_name="Name")
 
+    def __str__(self):
+        return self.name
+
 
 class TileTypes(models.TextChoices):
     SIDE = "SIDE", _("RAND")

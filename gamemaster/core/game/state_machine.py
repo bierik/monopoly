@@ -18,9 +18,9 @@ class GameMachine(StateMachine):
     lose = turn_ended.to(lost)
 
     def __init__(self, participation):
+        super().__init__()
         self.participation = participation
         self.dice = Dice()
-        super().__init__()
 
     def is_players_turn(self):
         return self.participation.is_players_turn

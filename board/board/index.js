@@ -36,7 +36,7 @@ export default class Board {
   buildPath(from, to) {
     const startTile = findIndex(this.structure.tiles, { identifier: from })
     const endTile = findIndex(this.structure.tiles, { identifier: to })
-    return map(this.structure.tiles.slice(startTile, endTile + 1), 'identifier')
+    return map(this.structure.tiles.slice(startTile, endTile), 'identifier')
   }
 
   createTile(bla) {

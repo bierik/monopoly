@@ -14,8 +14,7 @@ const onMessage = useOnMessage()
 const { data: game } = await useAsyncData('game', () => api(`/game/${route.params.id}/`))
 
 if (toValue(game).status === 'RUNNING') {
-  debugger
-  router.replace({ name: 'participation-id-play', params: { id: route.query.participation_id } })
+  router.replace({ name: 'game-id-play', params: { id: game.pk } })
 }
 
 async function startGame() {
@@ -25,7 +24,7 @@ async function startGame() {
 const gameStartedMessage = computed(() => `game/${route.params.id}/started`)
 
 onMessage(gameStartedMessage, () => {
-  router.replace({ name: 'participation-id-play', params: { id: route.query.participation_id } })
+  router.replace({ name: 'game-id-play', params: { id: game.pk } })
 })
 
 const isOwner = toValue(game).owner_id === user.pk
