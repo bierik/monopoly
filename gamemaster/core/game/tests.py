@@ -1,4 +1,5 @@
 import random
+from operator import methodcaller
 from pathlib import Path
 from unittest import mock
 
@@ -16,7 +17,7 @@ from core.board.monopoly_swiss import create as create_monopoly_board
 from core.device.models import Device
 from core.exceptions import MaxParticipationsExceeded
 from core.game.models import Character, Game, GameStatus, Participation
-from core.game.state_machine import GameMachine
+from core.statemachine import GameMachine
 from core.testutils import create_player_client
 
 User = get_user_model()
@@ -41,7 +42,6 @@ class GameTestCase(APITestCase):
 
     def test_creates_game(self):
         device = Device.objects.create(user_agent="user_agent")
-        character = create_character(name="Goblin", identifier="goblin")
         player = User.objects.create(username="hans")
         player_client = create_player_client(player)
         self.assertEqual(0, Game.objects.count())
@@ -178,7 +178,6 @@ class GameTestCase(APITestCase):
 
     def test_creating_a_game_sets_the_creator_as_the_owner(self):
         device = Device.objects.create(user_agent="user_agent")
-        character = create_character(name="Goblin", identifier="goblin")
         player = User.objects.create(username="hans")
         player_client = create_player_client(player)
         self.assertEqual(0, Game.objects.count())
@@ -244,19 +243,19 @@ class GameTestCase(APITestCase):
 
         self.assertEqual(
             [False, False, False, False],
-            pydash.pluck(participations, "is_players_turn"),
+            list(map(methodcaller("is_players_turn"), participations)),
         )
 
         game.give_turn_to(peter)
         self.assertEqual(
             [False, True, False, False],
-            pydash.pluck(participations, "is_players_turn"),
+            list(map(methodcaller("is_players_turn"), participations)),
         )
 
         game.give_turn_to(bruno)
         self.assertEqual(
             [False, False, False, True],
-            pydash.pluck(participations, "is_players_turn"),
+            list(map(methodcaller("is_players_turn"), participations)),
         )
 
     def test_configure_max_participations(self):
@@ -412,27 +411,34 @@ class GameMaschineTestCase(APITestCase):
         self.urs = User.objects.create(username="urs")
         self.bruno = User.objects.create(username="bruno")
 
+    def test_persists_state(self):
+        participation = self.game.join(self.hans, create_character(name="Goblin", identifier="goblin"))
+        self.assertEqual("idle", participation.state)
+
+        self.game.hand_over_turn()
+        participation.statemachine.start_turn()
+
     def test_restricts_turn_to_players_turn(self):
-        hans_machine = GameMachine(self.game.join(self.hans, create_character(name="Goblin", identifier="goblin")))
-        bruno_machine = GameMachine(self.game.join(self.bruno, create_character(name="Pirate", identifier="pirate")))
-        urs_machine = GameMachine(self.game.join(self.urs, create_character(name="Male", identifier="male")))
+        hans_machine = self.game.join(self.hans, create_character(name="Goblin", identifier="goblin"))
+        bruno_machine = self.game.join(self.bruno, create_character(name="Pirate", identifier="pirate"))
+        urs_machine = self.game.join(self.urs, create_character(name="Male", identifier="male"))
 
         machines = [hans_machine, bruno_machine, urs_machine]
 
-        self.assertEqual(["idle", "idle", "idle"], pydash.pluck(machines, "current_state.id"))
+        self.assertEqual(["idle", "idle", "idle"], pydash.pluck(machines, "state"))
 
         with self.assertRaises(TransitionNotAllowed):
-            hans_machine.start_turn()
+            hans_machine.statemachine.start_turn()
 
-        self.game.give_turn_to(self.hans)
+        self.game.hand_over_turn()
 
-        hans_machine.start_turn()
-        self.assertEqual(["turn_started", "idle", "idle"], pydash.pluck(machines, "current_state.id"))
+        hans_machine.statemachine.start_turn()
+        self.assertEqual(["turn_started", "idle", "idle"], pydash.pluck(machines, "state"))
 
     def test_hands_over_turn_to_next_player(self):
         hans_machine = GameMachine(self.game.join(self.hans, create_character(name="Goblin", identifier="goblin")))
         self.game.join(self.bruno, create_character(name="Goblin", identifier="goblin"))
-        self.game.give_turn_to(self.hans)
+        self.game.hand_over_turn()
         hans_machine.start_turn()
         hans_machine.roll_dice()
         hans_machine.move()
@@ -446,14 +452,10 @@ class GameMaschineTestCase(APITestCase):
 
         participation = self.game.join(self.hans, create_character(name="Goblin", identifier="goblin"))
         hans_machine = GameMachine(participation)
-        self.game.give_turn_to(self.hans)
+        self.game.hand_over_turn()
         hans_machine.start_turn()
-        hans_machine.roll_dice()
-
         self.assertEqual(self.board.tiles.get(identifier="start"), participation.current_tile)
-
-        hans_machine.move()
-        participation.refresh_from_db(fields=["current_tile"])
+        hans_machine.roll_dice()
         self.assertEqual(self.board.tiles.get(identifier="chance3"), participation.current_tile)
 
 

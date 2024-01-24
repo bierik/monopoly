@@ -23,9 +23,9 @@ const password = ref('')
 async function login() {
   await api('/login/', { method: 'POST', body: { username: toValue(username), password: toValue(password) } })
   if (!next) {
-    router.replace({ name: 'index' })
+    router.push({ name: 'index' })
   } else {
-    router.replace(next)
+    router.push(next)
   }
 }
 </script>

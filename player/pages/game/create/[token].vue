@@ -40,6 +40,6 @@ async function createGame() {
     method: 'POST',
     headers: { 'X-Device-Token': route.params.token },
   })
-  router.replace({ name: 'game-id-join', params: { id: game.pk } })
+  router.push({ name: 'game-id-join', params: { id: game.pk } })
 }
 </script>

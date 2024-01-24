@@ -39,6 +39,6 @@ onMessage(joinGameMessage, () => {
   refreshLobby()
 })
 onMessage(gameStartedMessage, () => {
-  router.replace({ name: 'game-id', params: { id: route.params.id } })
+  router.push({ name: 'game-id', params: { id: route.params.id } })
 })
 </script>

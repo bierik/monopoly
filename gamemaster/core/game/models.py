@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from django_extensions.db.models import TimeStampedModel
 from ordered_model.models import OrderedModel
 from pygltflib import GLTF2
+from statemachine.mixins import MachineMixin
 
 from core.exceptions import (
     AlreadyParticipantException,
@@ -151,7 +152,9 @@ class Game(TimeStampedModel):
         mqtt_client.publish(f"game/{self.pk}/started", {"game_id": self.pk})
 
 
-class Participation(OrderedModel):
+class Participation(OrderedModel, MachineMixin):
+    state_machine_name = "core.statemachine.GameMachine"
+
     class Meta(OrderedModel.Meta):
         verbose_name = _("Teilnahme")
         verbose_name_plural = _("Teilnahmen")
@@ -182,6 +185,7 @@ class Participation(OrderedModel):
         on_delete=models.CASCADE,
     )
     balance = models.FloatField(verbose_name=_("Saldo"))
+    state = models.CharField(verbose_name=_("Status"), default="idle")
 
     def next(self):
         next = super().next()
@@ -191,7 +195,6 @@ class Participation(OrderedModel):
         prev = super().previous()
         return prev if prev else self.__class__.objects.last()
 
-    @property
     def is_players_turn(self):
         return self.game.current_turn == self.player
 

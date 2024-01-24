@@ -22,6 +22,6 @@ const createdGameMessage = computed(() => `${toValue(data).token}/game/created`)
 const createGameURL = computed(() => createCreateGameURL(useDeviceToken()))
 
 onMessage(createdGameMessage, ({ game_id: gameId }) => {
-  router.replace({ name: 'lobby-id', params: { id: gameId } })
+  router.push({ name: 'lobby-id', params: { id: gameId } })
 })
 </script>

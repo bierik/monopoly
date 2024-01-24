@@ -43,7 +43,7 @@ async function joinGame() {
     method: 'POST',
     body: { character: toValue(selectedCharacter) },
   })
-  router.replace({
+  router.push({
     name: 'game-id',
     params: { id: route.params.id },
   })
