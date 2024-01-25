@@ -309,6 +309,15 @@ class GameTestCase(APITestCase):
         game.join(hans, create_character(name="Goblin", identifier="goblin"))
         mqtt_publish.assert_called_with(f"game/{game.pk}/joined", {"game_id": game.pk})
 
+    @mock.patch("core.mqtt_client.mqtt_client.publish")
+    def test_notifies_when_all_participants_have_joined_the_game(self, mqtt_publish):
+        hans = User.objects.create(username="hans")
+        peter = User.objects.create(username="peter")
+        game = Game.objects.create(owner=hans, board=self.board, max_participations=2)
+        game.join(hans, create_character(name="Goblin", identifier="goblin"))
+        game.join(peter, create_character(name="Zombie", identifier="zombie"))
+        mqtt_publish.assert_called_with(f"game/{game.pk}/all_joined", {"game_id": game.pk})
+
     def test_lists_participations_for_a_game_lobby(self):
         hans = User.objects.create(username="hans")
         peter = User.objects.create(username="peter")

@@ -107,7 +107,7 @@ class Game(TimeStampedModel):
     max_participations = models.IntegerField(verbose_name=_("Maximale Anzahl Teilnahmen"), default=4)
     board = models.ForeignKey("Board", verbose_name=_("Spielbrett"), on_delete=models.CASCADE)
 
-    def join(self, player, character, balance=0):
+    def _check_can_join(self, player, character):
         if self.participations.count() == self.max_participations:
             raise MaxParticipationsExceeded()
         if self.participations.filter(player=player).exists():
@@ -116,6 +116,15 @@ class Game(TimeStampedModel):
             raise JoinStartedGameException()
         if self.participations.filter(character=character).exists():
             raise SameCharacterException()
+
+    def _check_can_start(self):
+        if self.participations.count() != self.max_participations:
+            raise LobbyNotReadyException()
+        if self.status not in GameStatus.accept_start_status:
+            raise GameStartException()
+
+    def join(self, player, character, balance=0):
+        self._check_can_join(player, character)
         participation = Participation.objects.create(
             game=self,
             player=player,
@@ -124,6 +133,8 @@ class Game(TimeStampedModel):
             current_tile=self.board.tiles.first(),
         )
         mqtt_client.publish(f"game/{self.pk}/joined", {"game_id": self.pk})
+        if self.participations.count() == self.max_participations:
+            mqtt_client.publish(f"game/{self.pk}/all_joined", {"game_id": self.pk})
         return participation
 
     @property
@@ -143,10 +154,6 @@ class Game(TimeStampedModel):
         self.give_turn_to(self.next_turn)
 
     def start(self):
-        if self.participations.count() != self.max_participations:
-            raise LobbyNotReadyException()
-        if self.status not in GameStatus.accept_start_status:
-            raise GameStartException()
         self.status = GameStatus.RUNNING
         self.save(update_fields=["status"])
         mqtt_client.publish(f"game/{self.pk}/started", {"game_id": self.pk})

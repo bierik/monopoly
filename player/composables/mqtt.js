@@ -9,6 +9,7 @@ client.on('message', (topic, message) => {
 })
 
 await client.subscribeAsync('game/+/started')
+await client.subscribeAsync('game/+/all_joined')
 
 export const useSubscribe = () => (topic) => {
   return client.subscribeAsync(topic)

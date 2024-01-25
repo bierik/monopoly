@@ -1,6 +1,5 @@
 <template>
-  {{ game }}
-  <button @click="startGame" class="btn btn-primary" v-if="isOwner">Starten</button>
+  <button @click="startGame" class="btn btn-primary" v-if="showStartButton">Starten</button>
 </template>
 <script setup>
 definePageMeta({
@@ -22,10 +21,18 @@ async function startGame() {
 }
 
 const gameStartedMessage = computed(() => `game/${route.params.id}/started`)
+const participantJointMessage = computed(() => `game/${route.params.id}/all_joined`)
 
 onMessage(gameStartedMessage, () => {
   router.push({ name: 'game-id-play', params: { id: game.pk } })
 })
 
+const allHaveJoined = ref(false)
 const isOwner = toValue(game).owner_id === user.pk
+
+const showStartButton = computed(() => toValue(allHaveJoined) && isOwner)
+
+onMessage(participantJointMessage, () => {
+  allHaveJoined.value = true
+})
 </script>
