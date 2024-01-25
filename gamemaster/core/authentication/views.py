@@ -7,7 +7,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet
 
-from core.authentication.serializers import LoginRequestSerializer, PlayerDetailSerializer
+from core.authentication.serializers import (
+    LoginRequestSerializer,
+    PlayerDetailSerializer,
+)
 from core.game.models import Game
 from core.game.serializers import GameDetailSerializer
 

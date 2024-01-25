@@ -45,7 +45,12 @@ class Tile(OrderedModel):
     )
 
     board = models.ForeignKey(
-        "Board", verbose_name="Spielbrett", on_delete=models.SET_NULL, related_name="tiles", null=True, blank=True
+        "Board",
+        verbose_name="Spielbrett",
+        on_delete=models.SET_NULL,
+        related_name="tiles",
+        null=True,
+        blank=True,
     )
 
     def next(self):

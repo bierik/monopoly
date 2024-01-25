@@ -19,7 +19,14 @@ class GameDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Game
-        fields = ["pk", "status", "status_display", "max_participations", "owner_id", "board_id"]
+        fields = [
+            "pk",
+            "status",
+            "status_display",
+            "max_participations",
+            "owner_id",
+            "board_id",
+        ]
 
 
 class CharacterDetailSerializer(serializers.ModelSerializer):

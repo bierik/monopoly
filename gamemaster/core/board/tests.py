@@ -19,16 +19,32 @@ class BoardTestCase(APITestCase):
     def test_board_gives_successor_tile(self):
         board = Board.objects.create(name="dummy")
         a = Tile.objects.create(
-            identifier="A", type=TileTypes.CORNER, board=board, direction=Direction.BOTTOM, texture=self.texture
+            identifier="A",
+            type=TileTypes.CORNER,
+            board=board,
+            direction=Direction.BOTTOM,
+            texture=self.texture,
         )
         b = Tile.objects.create(
-            identifier="B", type=TileTypes.CORNER, board=board, direction=Direction.BOTTOM, texture=self.texture
+            identifier="B",
+            type=TileTypes.CORNER,
+            board=board,
+            direction=Direction.BOTTOM,
+            texture=self.texture,
         )
         c = Tile.objects.create(
-            identifier="C", type=TileTypes.CORNER, board=board, direction=Direction.BOTTOM, texture=self.texture
+            identifier="C",
+            type=TileTypes.CORNER,
+            board=board,
+            direction=Direction.BOTTOM,
+            texture=self.texture,
         )
         Tile.objects.create(
-            identifier="D", type=TileTypes.CORNER, board=board, direction=Direction.BOTTOM, texture=self.texture
+            identifier="D",
+            type=TileTypes.CORNER,
+            board=board,
+            direction=Direction.BOTTOM,
+            texture=self.texture,
         )
 
         self.assertEqual(a, a.successor(0))
@@ -40,28 +56,60 @@ class BoardTestCase(APITestCase):
     def test_retrieves_board_over_api(self):
         board = Board.objects.create(name="dummy")
         corner_1 = Tile.objects.create(
-            identifier="Corner 1", type=TileTypes.CORNER, board=board, direction=Direction.RIGHT, texture=self.texture
+            identifier="Corner 1",
+            type=TileTypes.CORNER,
+            board=board,
+            direction=Direction.RIGHT,
+            texture=self.texture,
         )
         side_1 = Tile.objects.create(
-            identifier="Side 1", type=TileTypes.SIDE, board=board, direction=Direction.RIGHT, texture=self.texture
+            identifier="Side 1",
+            type=TileTypes.SIDE,
+            board=board,
+            direction=Direction.RIGHT,
+            texture=self.texture,
         )
         corner_2 = Tile.objects.create(
-            identifier="Corner 2", type=TileTypes.CORNER, board=board, direction=Direction.BOTTOM, texture=self.texture
+            identifier="Corner 2",
+            type=TileTypes.CORNER,
+            board=board,
+            direction=Direction.BOTTOM,
+            texture=self.texture,
         )
         side_2 = Tile.objects.create(
-            identifier="Side 2", type=TileTypes.SIDE, board=board, direction=Direction.BOTTOM, texture=self.texture
+            identifier="Side 2",
+            type=TileTypes.SIDE,
+            board=board,
+            direction=Direction.BOTTOM,
+            texture=self.texture,
         )
         corner_3 = Tile.objects.create(
-            identifier="Corner 3", type=TileTypes.CORNER, board=board, direction=Direction.LEFT, texture=self.texture
+            identifier="Corner 3",
+            type=TileTypes.CORNER,
+            board=board,
+            direction=Direction.LEFT,
+            texture=self.texture,
         )
         side_3 = Tile.objects.create(
-            identifier="Side 3", type=TileTypes.SIDE, board=board, direction=Direction.LEFT, texture=self.texture
+            identifier="Side 3",
+            type=TileTypes.SIDE,
+            board=board,
+            direction=Direction.LEFT,
+            texture=self.texture,
         )
         corner_4 = Tile.objects.create(
-            identifier="Corner 4", type=TileTypes.CORNER, board=board, direction=Direction.TOP, texture=self.texture
+            identifier="Corner 4",
+            type=TileTypes.CORNER,
+            board=board,
+            direction=Direction.TOP,
+            texture=self.texture,
         )
         side_4 = Tile.objects.create(
-            identifier="Side 4", type=TileTypes.SIDE, board=board, direction=Direction.TOP, texture=self.texture
+            identifier="Side 4",
+            type=TileTypes.SIDE,
+            board=board,
+            direction=Direction.TOP,
+            texture=self.texture,
         )
 
         board.tiles.add(corner_1, corner_2, corner_3, corner_4, side_1, side_2, side_3, side_4)

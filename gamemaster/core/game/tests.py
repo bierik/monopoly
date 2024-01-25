@@ -126,7 +126,11 @@ class GameTestCase(APITestCase):
         character = create_character(name="Goblin", identifier="goblin")
         player = User.objects.create(username="hans")
         player_client = create_player_client(player)
-        game = Game.objects.create(status=GameStatus.FINISHED, owner=User.objects.create(username="peter"), board=self.board)
+        game = Game.objects.create(
+            status=GameStatus.FINISHED,
+            owner=User.objects.create(username="peter"),
+            board=self.board,
+        )
         response = player_client.post(
             reverse("game-join", kwargs={"pk": game.pk}),
             data={"character": character.pk},
