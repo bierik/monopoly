@@ -1,13 +1,15 @@
+const gamemasterServerUpstream = process.env.MONOPOLY_SERVER_UPSTREAM || 'http://gamemaster:8000'
+
 export default defineNuxtConfig({
   devtools: { enabled: true },
   ssr: false,
   nitro: {
     devProxy: {
       '/api/': {
-        target: 'http://gamemaster:8000/api/',
+        target: `${gamemasterServerUpstream}/api/`,
       },
       '/media/': {
-        target: 'http://gamemaster:8000/media/',
+        target: `${gamemasterServerUpstream}/media/`,
       },
     },
   },

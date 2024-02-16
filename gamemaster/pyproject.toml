@@ -25,6 +25,7 @@ django-configurations = "^2.5"
 uvicorn = "^0.24.0.post1"
 pytest-django = "^4.7.0"
 ruff = "^0.1.14"
+pytest-playwright = "^0.4.3"
 
 [build-system]
 requires = ["poetry-core"]
