@@ -26,7 +26,7 @@ class GameStatus(models.TextChoices):
     PAUSED = "PAUSED", _("Pausiert")
     FINISHED = "FINISHED", _("Abgeschlossen")
 
-    accept_start_status = [CREATED, RUNNING]
+accept_start_status = [GameStatus.CREATED, GameStatus.RUNNING]
 
 
 class MissingAnimationsException(ValidationError):
@@ -89,7 +89,7 @@ class Game(TimeStampedModel):
 
     objects = GameManager()
 
-    status = models.CharField(choices=GameStatus.choices, default=GameStatus.CREATED, verbose_name=_("Status"))
+    status = models.CharField(choices=GameStatus, default=GameStatus.CREATED, verbose_name=_("Status"))
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
@@ -120,7 +120,7 @@ class Game(TimeStampedModel):
     def _check_can_start(self):
         if self.participations.count() != self.max_participations:
             raise LobbyNotReadyException()
-        if self.status not in GameStatus.accept_start_status:
+        if self.status not in accept_start_status:
             raise GameStartException()
 
     def join(self, player, character, balance=0):
