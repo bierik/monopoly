@@ -34,8 +34,8 @@ class Tile(OrderedModel):
         ordering = ["order"]
 
     identifier = models.TextField(verbose_name="Identifier")
-    type = models.TextField(verbose_name="Typ", choices=TileTypes.choices)
-    direction = models.TextField(verbose_name="Richtung", choices=Direction.choices)
+    type = models.TextField(verbose_name="Typ", choices=TileTypes)
+    direction = models.TextField(verbose_name="Richtung", choices=Direction)
     texture = models.FileField(
         verbose_name="Textur",
         upload_to="textures",

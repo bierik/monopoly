@@ -4,12 +4,13 @@ version = "0.1.0"
 description = ""
 authors = ["Kevin Bieri <bierike@gmail.com>"]
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.13"
 paho-mqtt = "^1.6.1"
 psycopg2 = "^2.9.9"
-django = "^4.2.7"
+django = "^5.0.6"
 django-extensions = "^3.2.3"
 djangorestframework = "^3.14.0"
 pydash = "^7.0.6"
