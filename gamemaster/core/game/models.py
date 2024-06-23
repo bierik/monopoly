@@ -7,7 +7,6 @@ from django.utils.translation import gettext_lazy as _
 from django_extensions.db.models import TimeStampedModel
 from ordered_model.models import OrderedModel
 from pygltflib import GLTF2
-from statemachine.mixins import MachineMixin
 
 from core.exceptions import (
     AlreadyParticipantException,
@@ -15,8 +14,10 @@ from core.exceptions import (
     JoinStartedGameException,
     LobbyNotReadyException,
     MaxParticipationsExceeded,
+    NotPlayersTurnException,
     SameCharacterException,
 )
+from core.game.dice import roll_dice
 from core.mqtt_client import mqtt_client
 
 
@@ -157,11 +158,10 @@ class Game(TimeStampedModel):
         self._check_can_start()
         self.status = GameStatus.RUNNING
         self.save(update_fields=["status"])
+        self.hand_over_turn()
         mqtt_client.publish(f"game/{self.pk}/started", {"game_id": self.pk})
 
-
-class Participation(OrderedModel, MachineMixin):
-    state_machine_name = "core.statemachine.GameMachine"
+class Participation(OrderedModel):
 
     class Meta(OrderedModel.Meta):
         verbose_name = _("Teilnahme")
@@ -193,7 +193,6 @@ class Participation(OrderedModel, MachineMixin):
         on_delete=models.CASCADE,
     )
     balance = models.FloatField(verbose_name=_("Saldo"))
-    state = models.CharField(verbose_name=_("Status"), default="idle")
 
     def next(self):
         next = super().next()
@@ -207,5 +206,10 @@ class Participation(OrderedModel, MachineMixin):
         return self.game.current_turn == self.player
 
     def move(self, steps):
+        if not self.is_players_turn():
+            raise NotPlayersTurnException()
         self.current_tile = self.current_tile.successor(steps)
         self.save(update_fields=["current_tile"])
+
+    def move_random(self):
+        self.move(roll_dice()[0])

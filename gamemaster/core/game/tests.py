@@ -11,13 +11,11 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
-from statemachine.exceptions import TransitionNotAllowed
 
 from core.board.monopoly_swiss import create as create_monopoly_board
 from core.device.models import Device
-from core.exceptions import MaxParticipationsExceeded
+from core.exceptions import MaxParticipationsExceeded, NotPlayersTurnException
 from core.game.models import Character, Game, GameStatus, Participation
-from core.statemachine import GameMachine
 from core.testutils import create_player_client
 
 User = get_user_model()
@@ -411,7 +409,7 @@ class GameTestCase(APITestCase):
         self.assertEqual(participation.pk, response.json()["pk"])
 
 
-class GameMaschineTestCase(APITestCase):
+class GameLogicTestCase(APITestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -420,56 +418,73 @@ class GameMaschineTestCase(APITestCase):
     def setUp(self):
         super().setUp()
         self.hans = User.objects.create(username="hans")
-        self.game = Game.objects.create(owner=self.hans, board=self.board)
-        self.urs = User.objects.create(username="urs")
         self.bruno = User.objects.create(username="bruno")
 
-    def test_persists_state(self):
-        participation = self.game.join(self.hans, create_character(name="Goblin", identifier="goblin"))
-        self.assertEqual("idle", participation.state)
+    def test_when_game_starts_hands_over_turn_to_first_player(self):
+        game = Game.objects.create(owner=self.hans, board=self.board, max_participations=2)
+        game.join(self.bruno, create_character(name="Goblin", identifier="goblin"))
+        game.join(self.hans, create_character(name="Goblin", identifier="goblin"))
+        game.start()
+        self.assertEqual(self.bruno, game.current_turn)
 
-        self.game.hand_over_turn()
-        participation.statemachine.start_turn()
+    def test_current_tile_is_the_boards_first_tile(self):
+        game = Game.objects.create(owner=self.hans, board=self.board, max_participations=2)
+        game.join(self.bruno, create_character(name="Goblin", identifier="goblin"))
+        game.join(self.hans, create_character(name="Goblin", identifier="goblin"))
 
-    def test_restricts_turn_to_players_turn(self):
-        hans_machine = self.game.join(self.hans, create_character(name="Goblin", identifier="goblin"))
-        bruno_machine = self.game.join(self.bruno, create_character(name="Pirate", identifier="pirate"))
-        urs_machine = self.game.join(self.urs, create_character(name="Male", identifier="male"))
+        self.assertEqual(['start', 'start'], list(Participation.objects.values_list('current_tile__identifier', flat=True)))
 
-        machines = [hans_machine, bruno_machine, urs_machine]
+    def test_player_cannot_move_if_its_no_its_turn(self):
+        game = Game.objects.create(owner=self.hans, board=self.board, max_participations=2)
+        game.join(self.bruno, create_character(name="Goblin", identifier="goblin"))
+        participation = game.join(self.hans, create_character(name="Goblin", identifier="goblin"))
+        game.start()
 
-        self.assertEqual(["idle", "idle", "idle"], pydash.pluck(machines, "state"))
+        with self.assertRaises(NotPlayersTurnException):
+            participation.move(10)
 
-        with self.assertRaises(TransitionNotAllowed):
-            hans_machine.statemachine.start_turn()
+    def test_players_moves_steps_on_the_board(self):
+        game = Game.objects.create(owner=self.hans, board=self.board, max_participations=2)
+        participation = game.join(self.bruno, create_character(name="Goblin", identifier="goblin"))
+        game.join(self.hans, create_character(name="Goblin", identifier="goblin"))
+        game.start()
 
-        self.game.hand_over_turn()
+        self.assertEqual(['start', 'start'], list(Participation.objects.values_list('current_tile__identifier', flat=True)))
+        participation.move(1)
+        self.assertEqual(['chur_kornplatz', 'start'], list(Participation.objects.values_list('current_tile__identifier', flat=True)))
 
-        hans_machine.statemachine.start_turn()
-        self.assertEqual(["turn_started", "idle", "idle"], pydash.pluck(machines, "state"))
-
-    def test_hands_over_turn_to_next_player(self):
-        hans_machine = GameMachine(self.game.join(self.hans, create_character(name="Goblin", identifier="goblin")))
-        self.game.join(self.bruno, create_character(name="Goblin", identifier="goblin"))
-        self.game.hand_over_turn()
-        hans_machine.start_turn()
-        hans_machine.roll_dice()
-        hans_machine.move()
-        hans_machine.end_turn()
-
-        self.game.refresh_from_db(fields=["current_turn"])
-        self.assertEqual(self.bruno, self.game.current_turn)
-
-    def test_moves_some_steps_on_the_board(self):
+    def test_players_move_steps_on_the_board_using_dice(self):
         random.seed(42)
+        game = Game.objects.create(owner=self.hans, board=self.board, max_participations=2)
+        participation = game.join(self.bruno, create_character(name="Goblin", identifier="goblin"))
+        game.join(self.hans, create_character(name="Goblin", identifier="goblin"))
+        game.start()
 
-        participation = self.game.join(self.hans, create_character(name="Goblin", identifier="goblin"))
-        hans_machine = GameMachine(participation)
-        self.game.hand_over_turn()
-        hans_machine.start_turn()
-        self.assertEqual(self.board.tiles.get(identifier="start"), participation.current_tile)
-        hans_machine.roll_dice()
-        self.assertEqual(self.board.tiles.get(identifier="chance3"), participation.current_tile)
+        self.assertEqual(['start', 'start'], list(Participation.objects.values_list('current_tile__identifier', flat=True)))
+        participation.move_random()
+        self.assertEqual(['chance3', 'start'], list(Participation.objects.values_list('current_tile__identifier', flat=True)))
+
+    def test_player_is_not_allowed_to_move_other_participation(self):
+        game = Game.objects.create(owner=self.hans, board=self.board, max_participations=2)
+        participation = game.join(self.bruno, create_character(name="Goblin", identifier="goblin"))
+        game.join(self.hans, create_character(name="Goblin", identifier="goblin"))
+        game.start()
+        self.assertEqual(['start', 'start'], list(Participation.objects.values_list('current_tile__identifier', flat=True)))
+        client = create_player_client(self.hans)
+        response = client.post(reverse('participation-move', kwargs={"pk": participation.pk}))
+        self.assertEqual(status.HTTP_403_FORBIDDEN, response.status_code)
+
+    def test_players_move_steps_over_api(self):
+        random.seed(42)
+        game = Game.objects.create(owner=self.hans, board=self.board, max_participations=2)
+        participation = game.join(self.bruno, create_character(name="Goblin", identifier="goblin"))
+        game.join(self.hans, create_character(name="Goblin", identifier="goblin"))
+        game.start()
+        self.assertEqual(['start', 'start'], list(Participation.objects.values_list('current_tile__identifier', flat=True)))
+        client = create_player_client(self.bruno)
+        response = client.post(reverse('participation-move', kwargs={"pk": participation.pk}))
+        self.assertEqual(status.HTTP_204_NO_CONTENT, response.status_code)
+        self.assertEqual(['chance3', 'start'], list(Participation.objects.values_list('current_tile__identifier', flat=True)))
 
 
 @override_settings(VALIDATE_GLTF=True)

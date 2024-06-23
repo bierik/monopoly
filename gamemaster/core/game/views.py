@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet, mixins
 
 from core.game.models import Character, Game, Participation
-from core.game.permissions import IsGameOwnerPermission
+from core.game.permissions import IsGameOwnerPermission, IsPlayersParticipationPermission
 from core.game.serializers import (
     CharacterDetailSerializer,
     CreateGameSerializer,
@@ -73,3 +73,8 @@ class CharacterViewSet(GenericViewSet, mixins.ListModelMixin):
 class ParticipationViewSet(GenericViewSet, mixins.RetrieveModelMixin):
     queryset = Participation.objects.all()
     serializer_class = ParticipationDetailSerializer
+
+    @action(methods=['POST'], detail=True, permission_classes=[IsPlayersParticipationPermission])
+    def move(self, request, pk=None):
+        self.get_object().move_random()
+        return Response(status=status.HTTP_204_NO_CONTENT)

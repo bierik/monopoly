@@ -47,3 +47,10 @@ class GameStartException(ValidationError):
             detail="Game is in the wrong status to start.",
             code="game_start",
         )
+
+class NotPlayersTurnException(ValidationError):
+    def __init__(self):
+        super().__init__(
+            detail="It is not the players turn.",
+            code="not_players_turn",
+        )
