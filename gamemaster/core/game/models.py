@@ -154,6 +154,7 @@ class Game(TimeStampedModel):
         self.give_turn_to(self.next_turn)
 
     def start(self):
+        self._check_can_start()
         self.status = GameStatus.RUNNING
         self.save(update_fields=["status"])
         mqtt_client.publish(f"game/{self.pk}/started", {"game_id": self.pk})
