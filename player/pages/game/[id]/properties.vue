@@ -1,5 +1,7 @@
 <template>
-  {{ participation }}
+  <NuxtLayout>
+    {{ participation }}
+  </NuxtLayout>
 </template>
 <script setup>
 const route = useRoute();

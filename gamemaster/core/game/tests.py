@@ -15,7 +15,7 @@ from statemachine.exceptions import TransitionNotAllowed
 
 from core.board.monopoly_swiss import create as create_monopoly_board
 from core.device.models import Device
-from core.exceptions import MaxParticipationsError, NotPlayersTurnError, RollDiceNotAllowedError
+from core.exceptions import MaxParticipationsError, NotPlayersTurnError, ParticipationBlockedError, RollDiceNotAllowedError
 from core.game.models import Character, Game, GameStatus, Participation
 from core.game.participation import ParticipationStates
 from core.testutils import (
@@ -538,6 +538,14 @@ class GameLogicTestCase(APITestCase):
         game.start()
         participation.move(1)
         with self.assertRaises(RollDiceNotAllowedError):
+            participation.move(1)
+
+    def test_player_cannot_move_if_blocked(self):
+        game = Game.objects.create(owner=self.hans, board=self.board, max_participations=1, device=Device.objects.create())
+        participation = game.join(self.bruno, create_character(name="Goblin", identifier="goblin"))
+        game.start()
+        participation.block()
+        with self.assertRaises(ParticipationBlockedError):
             participation.move(1)
 
 

@@ -1,33 +1,31 @@
 <template>
-  <form @submit.prevent="login">
-    <div class="card">
-      <input
-        v-model="username"
-        autofocus
-        type="text"
-        placeholder="Benutzername"
-        class="input mb-4 w-full outline"
-      />
-      <input
-        v-model="password"
-        type="password"
-        placeholder="Passwort"
-        class="input mb-4 w-full outline"
-      />
-      <input
-        type="submit"
-        class="btn btn-primary"
-        value="Anmelden"
-        data-testid="login-button"
-      />
-    </div>
-  </form>
+  <NuxtLayout name="full">
+    <form @submit.prevent="login">
+      <div class="card">
+        <input
+          v-model="username"
+          autofocus
+          type="text"
+          placeholder="Benutzername"
+          class="input mb-4 w-full outline"
+        />
+        <input
+          v-model="password"
+          type="password"
+          placeholder="Passwort"
+          class="input mb-4 w-full outline"
+        />
+        <input
+          type="submit"
+          class="btn btn-primary"
+          value="Anmelden"
+          data-testid="login-button"
+        />
+      </div>
+    </form>
+  </NuxtLayout>
 </template>
 <script setup>
-definePageMeta({
-  layout: "full",
-});
-
 const router = useRouter();
 const route = useRoute();
 

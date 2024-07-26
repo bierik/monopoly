@@ -1,20 +1,22 @@
 <template>
-  <button
-    class="btn btn-primary"
-    data-testid="roll-dice-button"
-    :disabled="!canRollDice"
-    @click="rollDice"
-  >
-    Würfeln
-  </button>
-  <button
-    class="btn btn-primary"
-    data-testid="end-turn-button"
-    :disabled="!canEndTurn"
-    @click="endTurn"
-  >
-    Zug beenden
-  </button>
+  <NuxtLayout>
+    <button
+      class="btn btn-primary"
+      data-testid="roll-dice-button"
+      :disabled="!canRollDice"
+      @click="rollDice"
+    >
+      Würfeln
+    </button>
+    <button
+      class="btn btn-primary"
+      data-testid="end-turn-button"
+      :disabled="!canEndTurn"
+      @click="endTurn"
+    >
+      Zug beenden
+    </button>
+  </NuxtLayout>
 </template>
 <script setup>
 const route = useRoute();

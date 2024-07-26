@@ -1,5 +1,5 @@
 upstream gamemaster {
-    server gamemaster:8000;
+    server ${GAMEMASTER_UPSTREAM};
 }
 upstream player {
     server player:3000;

@@ -1,23 +1,21 @@
 <template>
-  <h1 class="mb-4 text-2xl">Registrieren</h1>
-  <p class="mb-4 text-center text-sm">
-    QR-Code scannen, um ein Spiel zu starten
-  </p>
-  <a :href="createGameURL" data-testid="create-game-link">
-    <QrcodeVue
-      background="transparent"
-      render-as="svg"
-      :size="200"
-      :value="createGameURL"
-    />
-  </a>
+  <NuxtLayout name="full">
+    <h1 class="mb-4 text-2xl">Registrieren</h1>
+    <p class="mb-4 text-center text-sm">
+      QR-Code scannen, um ein Spiel zu starten
+    </p>
+    <a :href="createGameURL" data-testid="create-game-link">
+      <QrcodeVue
+        background="transparent"
+        render-as="svg"
+        :size="200"
+        :value="createGameURL"
+      />
+    </a>
+  </NuxtLayout>
 </template>
 <script setup>
 import { createCreateGameURL } from "@/url";
-
-definePageMeta({
-  layout: "full",
-});
 
 const router = useRouter();
 

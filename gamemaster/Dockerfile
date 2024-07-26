@@ -1,17 +1,17 @@
-FROM python:3.12.0-alpine3.18 AS builder
+FROM python:3.12-alpine3.20 AS builder
 
 WORKDIR /app
 
-RUN apk add --no-cache gcc musl-dev postgresql-dev
+RUN apk add --no-cache gcc build-base libpq-dev postgresql-dev
 
 COPY requirements.txt .
 
 RUN --mount=type=cache,target=/root/.cache \
     python -m pip install -r requirements.txt
 
-FROM python:3.12.0-alpine3.18
+FROM python:3.12-alpine3.20
 
-RUN apk add --no-cache postgresql
+RUN apk add --no-cache libpq postgresql
 
 RUN python -m pip install uvicorn
 

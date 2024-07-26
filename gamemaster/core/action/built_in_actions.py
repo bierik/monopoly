@@ -11,4 +11,4 @@ class StartAction(Action):
 
     def run(self, participation):
         participation.balance += 200
-        participation.save()
+        participation.save(update_fields=["balance"])

@@ -1,1 +1,3 @@
-<template>account</template>
+<template>
+  <NuxtLayout> account </NuxtLayout>
+</template>

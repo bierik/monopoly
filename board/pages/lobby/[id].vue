@@ -1,42 +1,40 @@
 <template>
-  <h1 class="mb-4 text-2xl">Spiel beitreten</h1>
-  <a :href="joinGameURL" class="mb-12">
-    <QrcodeVue
-      :size="200"
-      :value="joinGameURL"
-      background="transparent"
-      render-as="svg"
-    />
-  </a>
-  <div class="flex gap-4">
-    <div
-      v-for="participation in lobby"
-      :key="participation.id"
-      class="card flex size-48 items-center justify-center bg-slate-200 p-8"
-    >
-      <GLTFViewer :path="participation.character.url" />
-      <span data-testid="participation-username" class="text-xl">{{
-        participation.player.username
-      }}</span>
+  <NuxtLayout name="full">
+    <h1 class="mb-4 text-2xl">Spiel beitreten</h1>
+    <a :href="joinGameURL" class="mb-12">
+      <QrcodeVue
+        :size="200"
+        :value="joinGameURL"
+        background="transparent"
+        render-as="svg"
+      />
+    </a>
+    <div class="flex gap-4">
+      <div
+        v-for="participation in lobby"
+        :key="participation.id"
+        class="card flex size-48 items-center justify-center bg-slate-200 p-8"
+      >
+        <GLTFViewer :path="participation.character.url" />
+        <span data-testid="participation-username" class="text-xl">{{
+          participation.player.username
+        }}</span>
+      </div>
+      <div
+        v-for="missingParticipation in missingParticipations"
+        :key="missingParticipation"
+        data-testid="missing-participation"
+        class="card flex size-48 items-center justify-center bg-slate-400 p-12"
+      >
+        <span class="loading loading-ring loading-lg text-primary" />
+      </div>
     </div>
-    <div
-      v-for="missingParticipation in missingParticipations"
-      :key="missingParticipation"
-      data-testid="missing-participation"
-      class="card flex size-48 items-center justify-center bg-slate-400 p-12"
-    >
-      <span class="loading loading-ring loading-lg text-primary" />
-    </div>
-  </div>
+  </NuxtLayout>
 </template>
 <script setup>
 import QrcodeVue from "qrcode.vue";
 import { createJoinGameURL } from "@/url";
 import { size } from "lodash-es";
-
-definePageMeta({
-  layout: "full",
-});
 
 const route = useRoute();
 const router = useRouter();

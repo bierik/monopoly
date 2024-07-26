@@ -22,6 +22,7 @@ class Base(Configuration):
         "drf_standardized_errors",
         "ordered_model",
         "core",
+        "drf_spectacular",
     ]
 
     MIDDLEWARE = [
@@ -63,6 +64,14 @@ class Base(Configuration):
         "DEFAULT_PERMISSION_CLASSES": [
             "rest_framework.permissions.IsAuthenticated",
         ],
+        "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    }
+
+    SPECTACULAR_SETTINGS = {
+        "TITLE": "Monopoly gamemaster",
+        "DESCRIPTION": "Implements monopoly game rules",
+        "VERSION": "1.0.0",
+        "SERVE_INCLUDE_SCHEMA": False,
     }
 
     LANGUAGE_CODE = "de-ch"
@@ -129,4 +138,4 @@ class Testing(Base):
     MEDIA_URL = "/media/"
 
     MQTT_HOST = "localhost"
-    MQTT_PORT = 5000
+    MQTT_PORT = 1883

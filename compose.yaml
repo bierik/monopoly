@@ -6,12 +6,29 @@ services:
       dockerfile: Dockerfile
     ports:
       - 5000:80
+    environment:
+      - GAMEMASTER_UPSTREAM=gamemaster:8000
+    profiles: [dev]
+
+  test-ingress:
+    container_name: test-ingress
+    build:
+      context: ingress
+      dockerfile: Dockerfile
+    ports:
+      - 10000:80
+    environment:
+      - GAMEMASTER_UPSTREAM=host.docker.internal:50000
+    profiles: [test]
 
   mosquitto:
     container_name: mosquitto
     image: eclipse-mosquitto:2.0.18
     volumes:
       - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
+    ports:
+      - 1883:1883
+    profiles: [dev, test]
 
   board:
     container_name: board
@@ -21,8 +38,7 @@ services:
     volumes:
       - ./board:/app
       - /app/node_modules
-    depends_on:
-      - mosquitto
+    profiles: [dev, test]
 
   gamemaster:
     container_name: gamemaster
@@ -36,11 +52,9 @@ services:
       DJANGO_DATABASE_HOST: db
       DJANGO_DATABASE_USER: postgres
       PARTICIPATIONS: 2
-    depends_on:
-      - mosquitto
-      - db
     stdin_open: true
     tty: true
+    profiles: [dev, test]
 
   player:
     container_name: player
@@ -50,8 +64,7 @@ services:
     volumes:
       - ./player:/app
       - /app/node_modules
-    depends_on:
-      - mosquitto
+    profiles: [dev, test]
 
   db:
     container_name: db
@@ -62,6 +75,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
       POSTGRES_DB: postgres
+    profiles: [dev]
 
   test-db:
     container_name: test-db
@@ -73,3 +87,6 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
       POSTGRES_DB: postgres
+    profiles: [test]
+    tmpfs:
+      - /var/lib/postgresql

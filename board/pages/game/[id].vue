@@ -1,5 +1,7 @@
 <template>
-  <canvas ref="canvas" />
+  <NuxtLayout name="full">
+    <canvas ref="canvas" />
+  </NuxtLayout>
 </template>
 <script setup>
 import * as THREE from "three";
@@ -22,10 +24,6 @@ const { data: lobby } = await useAsyncData("lobby", () =>
 const { data: boardStructure } = await useAsyncData("board", () =>
   api(`/board/${toValue(game).board_id}/`),
 );
-
-definePageMeta({
-  layout: "full",
-});
 
 onMounted(async () => {
   const scene = new THREE.Scene();

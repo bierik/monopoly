@@ -19,6 +19,7 @@ from core.exceptions import (
     LobbyNotReadyError,
     MaxParticipationsError,
     NotPlayersTurnError,
+    ParticipationBlockedError,
     RollDiceNotAllowedError,
     SameCharacterError,
 )
@@ -229,6 +230,7 @@ class Participation(OrderedModel, models.Model, MachineMixin):
         default=0,
     )
     state = models.CharField(default=ParticipationStates.IDLE.value)
+    is_blocked = models.BooleanField(verbose_name=_("Blockiert"), default=False)
 
     class Meta(OrderedModel.Meta):
         verbose_name = _("Teilnahme")
@@ -254,6 +256,8 @@ class Participation(OrderedModel, models.Model, MachineMixin):
             raise NotPlayersTurnError
         if not self.state == ParticipationStates.IDLE.value:
             raise RollDiceNotAllowedError
+        if self.is_blocked:
+            raise ParticipationBlockedError
         for tile in self.current_tile.successors(steps):
             tile.call_action(participation=self, trigger=Triggers.TRAVERSED)
         self.current_tile = self.current_tile.successor(steps)
@@ -268,6 +272,10 @@ class Participation(OrderedModel, models.Model, MachineMixin):
     def end_turn(self):
         self.statemachine.end_turn()
         self.game.hand_over_turn()
+
+    def block(self):
+        self.is_blocked = True
+        self.save(update_fields=["is_blocked"])
 
 
 @receiver(signals.post_save, sender=Participation)

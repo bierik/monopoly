@@ -1,22 +1,21 @@
 <template>
-  <button
-    v-if="isOwner"
-    class="btn btn-primary"
-    data-testid="start-game-button"
-    :disabled="!game.is_lobby_full"
-    @click="startGame"
-  >
-    Starten
-  </button>
-  <div v-else class="flex flex-col items-center justify-center">
-    <span class="loading loading-ring loading-lg mb-4 text-primary" />
-    <span class="text-xl">Warten auf Spielstart</span>
-  </div>
+  <NuxtLayout name="full">
+    <button
+      v-if="isOwner"
+      class="btn btn-primary"
+      data-testid="start-game-button"
+      :disabled="!game.is_lobby_full"
+      @click="startGame"
+    >
+      Starten
+    </button>
+    <div v-else class="flex flex-col items-center justify-center">
+      <span class="loading loading-ring loading-lg mb-4 text-primary" />
+      <span class="text-xl">Warten auf Spielstart</span>
+    </div>
+  </NuxtLayout>
 </template>
 <script setup>
-definePageMeta({
-  layout: "full",
-});
 const route = useRoute();
 const router = useRouter();
 const user = useUserStore();

@@ -63,3 +63,11 @@ class RollDiceNotAllowedError(ValidationError):
             detail="Player can not roll dice.",
             code="roll_dice_not_allowed",
         )
+
+
+class ParticipationBlockedError(ValidationError):
+    def __init__(self):
+        super().__init__(
+            detail="Participation is blocked.",
+            code="blocked_participation",
+        )

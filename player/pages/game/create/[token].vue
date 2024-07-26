@@ -1,69 +1,67 @@
 <template>
-  <h1 class="mb-4 text-2xl">Neues Spiel erstellen</h1>
-  <form class="flex flex-col" @submit.prevent="createGame">
-    <label class="form-control w-full">
-      <div class="label">
-        <span class="label-text">Anzahl Spieler</span>
-      </div>
-      <input
-        v-model="maxParticipations"
-        autofocus
-        type="number"
-        class="input w-full outline"
-      />
-    </label>
-    <label class="form-control w-full">
-      <div class="label">
-        <span class="label-text">Spielbrett</span>
-      </div>
-      <select
-        v-model="board"
-        placeholder="Spielbrett"
-        class="select w-full outline"
-      >
-        <option
-          v-for="boardOption in boards"
-          :key="boardOption.pk"
-          :value="boardOption.pk"
+  <NuxtLayout name="full">
+    <h1 class="mb-4 text-2xl">Neues Spiel erstellen</h1>
+    <form class="flex flex-col" @submit.prevent="createGame">
+      <label class="form-control w-full">
+        <div class="label">
+          <span class="label-text">Anzahl Spieler</span>
+        </div>
+        <input
+          v-model="maxParticipations"
+          autofocus
+          type="number"
+          class="input w-full outline"
+        />
+      </label>
+      <label class="form-control w-full">
+        <div class="label">
+          <span class="label-text">Spielbrett</span>
+        </div>
+        <select
+          v-model="board"
+          placeholder="Spielbrett"
+          class="select w-full outline"
         >
-          {{ boardOption.name }}
-        </option>
-      </select>
-    </label>
-    <label class="form-control w-full">
-      <div class="label">
-        <span class="label-text">Startkapital</span>
-      </div>
-      <input
-        v-model.number="initialBalance"
-        type="range"
-        :min="minBalance"
-        :max="maxBalance"
-        :step="stepBalance"
-        class="range range-primary"
-      />
-      <div class="flex w-full justify-between px-2 text-xs">
-        <span v-for="measure in balanceMeasures" :key="measure">{{
-          measure
-        }}</span>
-      </div>
-    </label>
-    <button
-      type="submit"
-      data-testid="create-new-game-button"
-      class="btn btn-primary mt-4"
-    >
-      Erstellen
-    </button>
-  </form>
+          <option
+            v-for="boardOption in boards"
+            :key="boardOption.pk"
+            :value="boardOption.pk"
+          >
+            {{ boardOption.name }}
+          </option>
+        </select>
+      </label>
+      <label class="form-control w-full">
+        <div class="label">
+          <span class="label-text">Startkapital</span>
+        </div>
+        <input
+          v-model.number="initialBalance"
+          type="range"
+          :min="minBalance"
+          :max="maxBalance"
+          :step="stepBalance"
+          class="range range-primary"
+        />
+        <div class="flex w-full justify-between px-2 text-xs">
+          <span v-for="measure in balanceMeasures" :key="measure">{{
+            measure
+          }}</span>
+        </div>
+      </label>
+      <button
+        type="submit"
+        data-testid="create-new-game-button"
+        class="btn btn-primary mt-4"
+      >
+        Erstellen
+      </button>
+    </form>
+  </NuxtLayout>
 </template>
 <script setup>
 import { first, range } from "lodash-es";
 import { toValue } from "vue";
-
-definePageMeta({
-  layout: "full",
-});
 
 const router = useRouter();
 const route = useRoute();
