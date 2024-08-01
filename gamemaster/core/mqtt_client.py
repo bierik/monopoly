@@ -44,5 +44,8 @@ class MQTTClient:
             f"game/{participation.game.pk}/moved", {"id": participation.id, "tile": participation.current_tile.identifier}
         )
 
+    def publish_action(self, participation, action):
+        self.publish(f"participation/{participation.pk}/action", {"id": participation.id, "action": action})
+
 
 mqtt_client = MQTTClient()

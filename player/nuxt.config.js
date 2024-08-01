@@ -1,11 +1,13 @@
 import { defineNuxtConfig } from "nuxt/config";
 
 export default defineNuxtConfig({
+  extends: ["../common"],
   devtools: { enabled: false },
   ssr: false,
   app: {
     baseURL: "/player/",
   },
+  modules: ["@nuxtjs/tailwindcss", "@pinia/nuxt", "@nuxt/icon", "@nuxt/eslint"],
   vite: {
     server: {
       hmr: {
@@ -18,16 +20,12 @@ export default defineNuxtConfig({
         "three",
         "@vueuse/core",
         "lodash-es",
-        "three/addons/loaders/GLTFLoader.js",
         "mqtt",
+        "three/addons/loaders/GLTFLoader.js",
       ],
     },
     build: {
       target: "esnext",
     },
-  },
-  modules: ["@nuxtjs/tailwindcss", "@pinia/nuxt", "@nuxt/icon", "@nuxt/eslint"],
-  experimental: {
-    scanPageMeta: false,
   },
 });

@@ -4,7 +4,7 @@ from django.db import transaction
 from rest_framework.test import APITestCase
 
 from core.action.action import Action, NoopAction
-from core.action.built_in_actions import StartAction
+from core.action.built_in_actions import JailAction, PunishAction, StartAction
 from core.action.exceptions import (
     ActionNotFoundError,
     InvalidActionDeclarationError,
@@ -14,7 +14,6 @@ from core.action.exceptions import (
 from core.action.registry import action_registry, register
 from core.action.trigger import Triggers
 from core.board.models import Board, Direction, Tile, TileTypes
-from core.board.monopoly_swiss import create as create_monopoly_board
 from core.device.models import Device
 from core.game.models import Game, Participation
 from core.testutils import create_character, create_player
@@ -30,6 +29,21 @@ class ActionTestCase(APITestCase):
         action_registry.clear()
         action_registry.register(NoopAction)
         action_registry.register(StartAction)
+        action_registry.register(PunishAction)
+        action_registry.register(JailAction)
+        self.board = Board.objects.create(name="test")
+        device = Device.objects.create()
+        self.player = create_player()
+        self.game = Game.objects.create(device=device, owner=self.player, board=self.board, max_participations=1)
+
+    def create_participation(self, tile, **kwargs):
+        return Participation.objects.create(
+            game=self.game,
+            player=self.player,
+            character=create_character("Zombie", "zombie"),
+            current_tile=tile,
+            **kwargs,
+        )
 
     def test_actions_must_have_necessary_attributes(self):
         class DoesNotSubclassAction:
@@ -61,7 +75,12 @@ class ActionTestCase(APITestCase):
         class CallableAction(ValidAction):
             run = mock.Mock()
 
-        action_registry.call_for_name("CallableAction", participation=None, trigger=None)
+        tile = Tile.objects.create(
+            identifier="test", type=TileTypes.CORNER, direction=Direction.BOTTOM, action=CallableAction
+        )
+        participation = self.create_participation(tile)
+
+        action_registry.call_for_name("CallableAction", participation=participation, trigger=None)
         CallableAction.run.assert_called_once()
 
     def test_asks_registry_if_action_exists(self):
@@ -90,17 +109,16 @@ class ActionTestCase(APITestCase):
             run = mock.Mock()
 
         tile = Tile.objects.create(
-            identifier="test", type=TileTypes.CORNER, direction=Direction.BOTTOM, action=CallableAction
+            identifier="test",
+            type=TileTypes.CORNER,
+            direction=Direction.BOTTOM,
+            action=CallableAction,
+            board=self.board,
         )
 
-        device = Device.objects.create()
-        player = create_player()
-        game = Game.objects.create(device=device, owner=player, board=create_monopoly_board())
-        participation = Participation.objects.create(
-            game=game, player=player, character=create_character("Zombie", "zombie"), current_tile=tile
-        )
+        participation = self.create_participation(tile)
         tile.call_action(participation, None)
-        CallableAction.run.assert_called_with(participation=participation)
+        CallableAction.run.assert_called_with(participation=participation, tile=tile, context={})
 
     def test_validates_action_triggers(self):
         class InvalidTriggerAction(ValidAction):
@@ -120,18 +138,21 @@ class ActionTestCase(APITestCase):
             triggers = [Triggers.LANDED_ON]
             run = mock.Mock()
 
-        board = Board.objects.create(name="test")
-        Tile.objects.create(identifier="test", type=TileTypes.CORNER, direction=Direction.BOTTOM, board=board, order=0)
-        Tile.objects.create(
-            identifier="test", type=TileTypes.CORNER, direction=Direction.BOTTOM, action=LandsOnAction, board=board, order=1
+        tile = Tile.objects.create(
+            identifier="test", type=TileTypes.CORNER, direction=Direction.BOTTOM, board=self.board, order=0
         )
-        device = Device.objects.create()
-        player = create_player()
-        game = Game.objects.create(device=device, owner=player, board=board, max_participations=1)
-        participation = game.join(player=player, character=create_character("Zombie", "zombie"))
-        game.start()
+        lands_on_tile = Tile.objects.create(
+            identifier="test",
+            type=TileTypes.CORNER,
+            direction=Direction.BOTTOM,
+            action=LandsOnAction,
+            board=self.board,
+            order=1,
+        )
+        participation = self.create_participation(tile)
+        self.game.start()
         participation.move(1)
-        LandsOnAction.run.assert_called_with(participation=participation)
+        LandsOnAction.run.assert_called_with(participation=participation, tile=lands_on_tile, context={})
 
     def test_traversed_trigger(self):
         @register()
@@ -139,32 +160,161 @@ class ActionTestCase(APITestCase):
             triggers = [Triggers.TRAVERSED]
             run = mock.Mock()
 
-        board = Board.objects.create(name="test")
-        Tile.objects.create(identifier="test", type=TileTypes.CORNER, direction=Direction.BOTTOM, board=board, order=0)
-        Tile.objects.create(identifier="test", type=TileTypes.CORNER, direction=Direction.BOTTOM, board=board, order=1)
-        Tile.objects.create(
-            identifier="test", type=TileTypes.CORNER, direction=Direction.BOTTOM, action=TraverseAction, board=board, order=1
+        tile = Tile.objects.create(
+            identifier="test", type=TileTypes.CORNER, direction=Direction.BOTTOM, board=self.board, order=0
         )
-        device = Device.objects.create()
-        player = create_player()
-        game = Game.objects.create(device=device, owner=player, board=board, max_participations=1)
-        participation = game.join(player=player, character=create_character("Zombie", "zombie"))
-        game.start()
+        Tile.objects.create(identifier="test", type=TileTypes.CORNER, direction=Direction.BOTTOM, board=self.board, order=1)
+        lands_on_tile = Tile.objects.create(
+            identifier="test",
+            type=TileTypes.CORNER,
+            direction=Direction.BOTTOM,
+            action=TraverseAction,
+            board=self.board,
+            order=1,
+        )
+        participation = self.create_participation(tile)
+        self.game.start()
         participation.move(5)
         self.assertEqual(
             [
-                mock.call(participation=participation),
-                mock.call(participation=participation),
+                mock.call(participation=participation, tile=lands_on_tile, context={}),
+                mock.call(participation=participation, tile=lands_on_tile, context={}),
             ],
             TraverseAction.run.mock_calls,
         )
 
     def test_start_action(self):
-        board = create_monopoly_board()
-        device = Device.objects.create()
-        player = create_player()
-        game = Game.objects.create(device=device, owner=player, board=board, max_participations=1)
-        participation = game.join(player=player, character=create_character("Zombie", "zombie"), balance=1000)
-
+        tile = Tile.objects.create(
+            identifier="test",
+            type=TileTypes.CORNER,
+            direction=Direction.BOTTOM,
+            action=StartAction,
+            board=self.board,
+            order=1,
+        )
+        participation = self.create_participation(tile)
         action_registry.call_for_name("StartAction", participation=participation, trigger=Triggers.TRAVERSED)
-        self.assertEqual(1200, participation.balance)
+        self.assertEqual(200, participation.balance)
+
+    def test_passes_action_context_to_call(self):
+        @register()
+        class ActionWithContext(ValidAction):
+            triggers = [Triggers.TRAVERSED]
+            run = mock.Mock()
+
+        tile = Tile.objects.create(
+            identifier="test",
+            type=TileTypes.CORNER,
+            direction=Direction.BOTTOM,
+            board=self.board,
+            order=1,
+            action=ActionWithContext,
+            action_context={"value": 1},
+        )
+        participation = self.create_participation(tile)
+        tile.call_action(participation, Triggers.TRAVERSED)
+        self.assertEqual(
+            [
+                mock.call(participation=participation, tile=tile, context={"value": 1}),
+            ],
+            ActionWithContext.run.mock_calls,
+        )
+
+    def test_serializes_action(self):
+        class ActionToSerialize(ValidAction):
+            title = "Title"
+            text = "Text"
+
+        action = ActionToSerialize()
+        self.assertEqual({"title": "Title", "text": "Text"}, action.serialize())
+
+    def test_serializes_action_from_context(self):
+        @register()
+        class ActionToSerialize(ValidAction):
+            title = "Title"
+            text = "Text"
+
+        action = ActionToSerialize()
+        self.assertEqual({"title": "Title", "text": "Text"}, action.serialize())
+        self.assertEqual(
+            {"title": "Another title", "text": "Another text"},
+            action.serialize({"text": "Another text", "title": "Another title"}),
+        )
+
+    def test_punish_action(self):
+        tile = Tile.objects.create(
+            identifier="test",
+            type=TileTypes.CORNER,
+            direction=Direction.BOTTOM,
+            board=self.board,
+            order=1,
+            action=PunishAction,
+        )
+        participation = self.create_participation(tile, balance=1000)
+        tile.call_action(participation, Triggers.LANDED_ON)
+        self.assertEqual(800, participation.balance)
+
+    def test_punish_action_with_custom_balance(self):
+        tile = Tile.objects.create(
+            identifier="test",
+            type=TileTypes.CORNER,
+            direction=Direction.BOTTOM,
+            board=self.board,
+            order=1,
+            action=PunishAction,
+            action_context={"punishment": 500},
+        )
+        participation = self.create_participation(tile, balance=1000)
+        tile.call_action(participation, Triggers.LANDED_ON)
+        self.assertEqual(500, participation.balance)
+
+    def test_jail_action(self):
+        tile = Tile.objects.create(
+            identifier="test",
+            type=TileTypes.CORNER,
+            direction=Direction.BOTTOM,
+            board=self.board,
+            order=1,
+            action=JailAction,
+        )
+        participation = self.create_participation(tile)
+        tile.call_action(participation, Triggers.LANDED_ON)
+        self.assertTrue(participation.is_blocked)
+
+    @mock.patch("core.mqtt_client.mqtt_client.publish")
+    def test_notifies_serialized_action(self, mqtt_publish):
+        @register()
+        class ActionToSerialize(ValidAction):
+            title = "Title"
+            text = "Text"
+            triggers = [Triggers.LANDED_ON]
+
+        tile = Tile.objects.create(
+            identifier="test",
+            type=TileTypes.CORNER,
+            direction=Direction.BOTTOM,
+            board=self.board,
+            order=1,
+            action=ActionToSerialize,
+        )
+        participation = self.create_participation(tile)
+        tile.call_action(participation, Triggers.LANDED_ON)
+
+        self.assertIn(
+            mock.call(
+                f"participation/{participation.pk}/action",
+                {"id": participation.pk, "action": {"title": "Title", "text": "Text"}},
+            ),
+            mqtt_publish.mock_calls,
+        )
+
+    # def test_validates_action_context(self):
+    #     with self.assertRaisesMessage(ValidationError, ""):
+    #         Tile.objects.create(
+    #             identifier="test",
+    #             type=TileTypes.CORNER,
+    #             direction=Direction.BOTTOM,
+    #             board=self.board,
+    #             order=1,
+    #             action_context={"unknown": 1, "punishment": "not a number"},
+    #         )

@@ -4,6 +4,7 @@
     { "path": "./gamemaster" },
     { "path": "./mosquitto" },
     { "path": "./player" },
+    { "path": "./common" },
     {
       "name": "monopoly",
       "path": "."

@@ -1,12 +1,11 @@
-import * as YUKA from "yuka";
-
+import { State } from "yuka";
 export const STATES = {
   IDLE: "IDLE",
   RUN: "RUN",
   WALK: "WALK",
 };
 
-export class IdleState extends YUKA.State {
+export class IdleState extends State {
   enter(character) {
     character.actions.get("Idle").reset().fadeIn(1);
   }
@@ -22,7 +21,7 @@ export class IdleState extends YUKA.State {
   }
 }
 
-export class WalkState extends YUKA.State {
+export class WalkState extends State {
   enter(character) {
     character.actions.get("Walk").reset().fadeIn(1);
   }
@@ -41,7 +40,7 @@ export class WalkState extends YUKA.State {
   }
 }
 
-export class RunState extends YUKA.State {
+export class RunState extends State {
   enter(character) {
     character.actions.get("Run").reset().fadeIn(1);
   }

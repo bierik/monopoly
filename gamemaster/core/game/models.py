@@ -1,6 +1,4 @@
-import pydash
 from django.conf import settings
-from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator
 from django.db import models
 from django.db.models import signals
@@ -8,7 +6,6 @@ from django.dispatch import receiver
 from django.utils.translation import gettext_lazy as _
 from django_extensions.db.models import TimeStampedModel
 from ordered_model.models import OrderedModel
-from pygltflib import GLTF2
 from statemachine.mixins import MachineMixin
 
 from core.action.trigger import Triggers
@@ -26,6 +23,7 @@ from core.exceptions import (
 from core.game.dice import roll_dice
 from core.game.participation import ParticipationStates
 from core.mqtt_client import mqtt_client
+from core.validators import validate_gltf
 
 
 class GameStatus(models.TextChoices):
@@ -38,24 +36,12 @@ class GameStatus(models.TextChoices):
 accept_start_status = [GameStatus.CREATED, GameStatus.RUNNING]
 
 
-class MissingAnimationsError(ValidationError):
-    def __init__(self):
-        super().__init__(
-            {
-                "model": _("Missing animations on gltf model. Necessary animations: {animations}").format(
-                    animations=", ".join(settings.GLTF_ANIMATIONS),
-                ),
-            },
-            "missing_animations",
-        )
-
-
 class Character(OrderedModel, models.Model):
     name = models.TextField(verbose_name=_("Name"))
     identifier = models.TextField(verbose_name=_("Identifier"))
     model = models.FileField(
         verbose_name=_("3D Modell"),
-        validators=[FileExtensionValidator(["gltf"])],
+        validators=[FileExtensionValidator(["gltf"]), validate_gltf],
         upload_to="characters",
     )
 
@@ -69,19 +55,6 @@ class Character(OrderedModel, models.Model):
     def save(self, *args, **kwargs):
         super().full_clean()
         return super().save(*args, **kwargs)
-
-    def validate_gltf(self):
-        self.model.file.seek(0)
-        gltf = GLTF2.from_json(self.model.file.read())
-        animation_names = set(pydash.pluck(gltf.animations, "name"))
-
-        if not set(settings.GLTF_ANIMATIONS).issubset(animation_names):
-            raise MissingAnimationsError
-
-    def clean(self):
-        super().clean_fields()
-        if settings.VALIDATE_GLTF:
-            self.validate_gltf()
 
 
 class GameManager(models.Manager):
@@ -275,6 +248,10 @@ class Participation(OrderedModel, models.Model, MachineMixin):
 
     def block(self):
         self.is_blocked = True
+        self.save(update_fields=["is_blocked"])
+
+    def release(self):
+        self.is_blocked = False
         self.save(update_fields=["is_blocked"])
 
 

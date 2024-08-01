@@ -1,3 +1,5 @@
+from django.conf import settings
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework.exceptions import ValidationError
 
 
@@ -71,3 +73,17 @@ class ParticipationBlockedError(ValidationError):
             detail="Participation is blocked.",
             code="blocked_participation",
         )
+
+
+class MissingAnimationsError(DjangoValidationError):
+    def __init__(self):
+        super().__init__(
+            "Missing animations on gltf model. Necessary animations: {animations}".format(
+                animations=", ".join(settings.GLTF_ANIMATIONS),
+            )
+        )
+
+
+class ActionContextSchemaMismatchError(DjangoValidationError):
+    def __init__(self):
+        super().__init__()

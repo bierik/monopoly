@@ -41,6 +41,7 @@ class Tile(OrderedModel, models.Model):
         blank=True,
     )
     action = ActionField(verbose_name="Aktion")
+    action_context = models.JSONField(verbose_name="Aktionskontext", default=dict, blank=True)
 
     board = models.ForeignKey(
         "Board",
@@ -57,6 +58,10 @@ class Tile(OrderedModel, models.Model):
 
     def __str__(self):
         return f"{self.identifier} on {self.board.name}"
+
+    def save(self, *args, **kwargs):
+        super().full_clean()
+        return super().save(*args, **kwargs)
 
     def next(self):
         next_tile = super().next()
@@ -81,4 +86,4 @@ class Tile(OrderedModel, models.Model):
             yield tile_list[successor_index]
 
     def call_action(self, participation, trigger):
-        self.action()(participation=participation, trigger=trigger)
+        self.action()(participation=participation, trigger=trigger, tile=self)

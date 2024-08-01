@@ -4,11 +4,18 @@
   </NuxtLayout>
 </template>
 <script setup>
-import * as THREE from "three";
 import Board from "@/board";
 import { useWindowSize } from "@vueuse/core";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import * as YUKA from "yuka";
+import { Time } from "yuka";
+import {
+  Scene,
+  PerspectiveCamera,
+  WebGLRenderer,
+  SRGBColorSpace,
+  Color,
+  AmbientLight,
+} from "three";
 
 const canvas = ref(null);
 const { width: windowWidth, height: windowHeight } = useWindowSize();
@@ -26,17 +33,17 @@ const { data: boardStructure } = await useAsyncData("board", () =>
 );
 
 onMounted(async () => {
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0xeaeaea);
+  const scene = new Scene();
+  scene.background = new Color(0xeaeaea);
 
-  const camera = new THREE.PerspectiveCamera(75, aspect, 0.1, 1000);
+  const camera = new PerspectiveCamera(75, aspect, 0.1, 1000);
   camera.position.set(0, 90, 0);
 
-  const renderer = new THREE.WebGLRenderer({
+  const renderer = new WebGLRenderer({
     antialias: true,
     canvas: canvas.value,
   });
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.outputColorSpace = SRGBColorSpace;
 
   watch(
     [windowWidth, windowHeight],
@@ -48,7 +55,7 @@ onMounted(async () => {
     { immediate: true },
   );
 
-  const light = new THREE.AmbientLight(0xffffff, Math.PI);
+  const light = new AmbientLight(0xffffff, Math.PI);
   scene.add(light);
 
   const controls = new OrbitControls(camera, canvas.value);
@@ -74,7 +81,7 @@ onMounted(async () => {
     board.moveCharacter(id, tile);
   });
 
-  const clock = new YUKA.Time();
+  const clock = new Time();
   renderer.setAnimationLoop(() => {
     const delta = clock.update().getDelta();
     board.update(delta);

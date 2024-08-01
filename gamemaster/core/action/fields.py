@@ -16,6 +16,8 @@ class ActionField(CharField):
     def to_python(self, value):
         if not value:
             return NoopAction
+        if not action_registry.exists(value):
+            raise InvalidActionNameError
         return action_registry.for_name(value)
 
     def get_prep_value(self, value):
