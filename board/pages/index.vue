@@ -15,8 +15,6 @@
   </NuxtLayout>
 </template>
 <script setup>
-import { createCreateGameURL } from "@/url";
-
 const router = useRouter();
 
 const { data } = await useAsyncData("register-device", () =>

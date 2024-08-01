@@ -11,7 +11,8 @@
     "lint": "pnpm run lint:eslint && yarn lint:prettier",
     "lint:eslint": "eslint .",
     "lint:prettier": "prettier . --check",
-    "lintfix": "eslint . --fix && prettier --write --list-different ."
+    "lintfix": "eslint . --fix && prettier --write --list-different .",
+    "test": "vitest"
   },
   "prettier": {
     "trailingComma": "all"
@@ -24,11 +25,13 @@
     "@nuxt/eslint": "^0.4.0",
     "@nuxt/icon": "^1.4.0",
     "@nuxtjs/tailwindcss": "^6.12.1",
+    "@types/three": "^0.167.1",
     "daisyui": "^4.12.10",
     "eslint": "^9.8.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
     "eslint-plugin-tailwindcss": "^3.17.4",
+    "jsdom": "^24.1.1",
     "nuxt": "^3.12.4",
     "prettier": "^3.3.3",
     "vitest": "^2.0.4",

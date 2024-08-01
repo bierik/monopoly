@@ -36,8 +36,9 @@ services:
       context: board
       dockerfile: Dockerfile
     volumes:
-      - ./board:/app
-      - /app/node_modules
+      - ./board:/app/board
+      - ./common:/app/common
+      - /app/board/node_modules
     profiles: [dev, test]
 
   gamemaster:
@@ -62,8 +63,9 @@ services:
       context: player
       dockerfile: Dockerfile
     volumes:
-      - ./player:/app
-      - /app/node_modules
+      - ./player:/app/player
+      - ./common:/app/common
+      - /app/player/node_modules
     profiles: [dev, test]
 
   db:

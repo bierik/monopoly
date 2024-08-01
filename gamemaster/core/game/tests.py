@@ -15,7 +15,12 @@ from statemachine.exceptions import TransitionNotAllowed
 
 from core.board.monopoly_swiss import create as create_monopoly_board
 from core.device.models import Device
-from core.exceptions import MaxParticipationsError, NotPlayersTurnError, ParticipationBlockedError, RollDiceNotAllowedError
+from core.exceptions import (
+    MaxParticipationsError,
+    NotPlayersTurnError,
+    ParticipationBlockedError,
+    RollDiceNotAllowedError,
+)
 from core.game.models import Character, Game, GameStatus, Participation
 from core.game.participation import ParticipationStates
 from core.testutils import (
@@ -556,17 +561,14 @@ class CharacterTestCase(TestCase):
             Character.objects.create(name="male", identifier="identifier")
 
     def test_only_accespts_gltf_files_for_model(self):
-        try:
+        with self.assertRaisesMessage(
+            ValidationError,
+            "{'model': ['Dateiendung „json“ ist nicht erlaubt. Erlaubte Dateiendungen sind: „gltf“.', 'Missing animations on gltf model. Necessary animations: Idle, Walk, Run']}",  # noqa: E501
+        ):
             Character.objects.create(
                 name="male",
                 identifier="identifier",
                 model=SimpleUploadedFile("model.json", b"{}", "application/json"),
-            )
-            self.fail("Only .gltf file extension should be valid.")
-        except ValidationError as e:
-            self.assertIn(
-                "Dateiendung „json“ ist nicht erlaubt. Erlaubte Dateiendungen sind: „gltf“.",
-                e.messages,
             )
 
     def test_model_includes_necessary_animations(self):
@@ -578,8 +580,7 @@ class CharacterTestCase(TestCase):
             )
 
         with self.assertRaisesMessage(
-            ValidationError,
-            "{'model': ['Missing animations on gltf model. Necessary animations: Idle, Walk, Run']}",
+            ValidationError, "{'model': ['Missing animations on gltf model. Necessary animations: Idle, Walk, Run']}"
         ):
             Character.objects.create(
                 name="male",

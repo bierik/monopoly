@@ -1,5 +1,5 @@
-import * as THREE from "three";
-import * as YUKA from "yuka";
+import { Mesh, Vector3, MeshStandardMaterial } from "three";
+import { Vector3 as YukaVector3 } from "yuka";
 
 const ATTACH_TO = {
   RIGHT: "RIGHT",
@@ -8,15 +8,18 @@ const ATTACH_TO = {
   TOP: "TOP",
 };
 
-export default class Tile extends THREE.Mesh {
+const GAP = 0.2;
+const material = new MeshStandardMaterial();
+
+export default class Tile extends Mesh {
   constructor(...params) {
     super(...params);
-    this.rotateX(-Math.PI / 2);
+    this.material = [material, material, material, material, material];
     this.occupiedSpots = {};
   }
 
   toYUKAVector() {
-    return new YUKA.Vector3(this.position.x, this.position.y, this.position.z);
+    return new YukaVector3(this.position.x, this.position.y, this.position.z);
   }
 
   isEqual(to) {
@@ -30,22 +33,16 @@ export default class Tile extends THREE.Mesh {
     return [
       this.position
         .clone()
-        .add(new THREE.Vector3(subtileWidth, 0, subtileHeight).divideScalar(2)),
+        .add(new Vector3(subtileWidth, 0, subtileHeight).divideScalar(2)),
       this.position
         .clone()
-        .add(
-          new THREE.Vector3(-subtileWidth, 0, +subtileHeight).divideScalar(2),
-        ),
+        .add(new Vector3(-subtileWidth, 0, +subtileHeight).divideScalar(2)),
       this.position
         .clone()
-        .add(
-          new THREE.Vector3(+subtileWidth, 0, -subtileHeight).divideScalar(2),
-        ),
+        .add(new Vector3(+subtileWidth, 0, -subtileHeight).divideScalar(2)),
       this.position
         .clone()
-        .add(
-          new THREE.Vector3(-subtileWidth, 0, -subtileHeight).divideScalar(2),
-        ),
+        .add(new Vector3(-subtileWidth, 0, -subtileHeight).divideScalar(2)),
     ];
   }
 
@@ -70,34 +67,38 @@ export default class Tile extends THREE.Mesh {
   placeNextTo(nextTo, attachTo) {
     switch (attachTo) {
       case ATTACH_TO.BOTTOM:
-        nextTo.rotateZ(Math.PI / 2);
+        nextTo.rotateY(Math.PI / 2);
         nextTo.position.x = this.position.x;
         nextTo.position.z =
           this.position.z +
           this.geometry.parameters.width / 2 +
-          nextTo.geometry.parameters.width / 2;
+          nextTo.geometry.parameters.width / 2 +
+          GAP;
         break;
       case ATTACH_TO.TOP:
-        nextTo.rotateZ(Math.PI / 2);
+        nextTo.rotateY(Math.PI / 2);
         nextTo.position.x = this.position.x;
         nextTo.position.z =
           this.position.z -
           this.geometry.parameters.width / 2 -
-          nextTo.geometry.parameters.width / 2;
+          nextTo.geometry.parameters.width / 2 -
+          GAP;
         break;
       case ATTACH_TO.RIGHT:
         nextTo.position.z = this.position.z;
         nextTo.position.x =
           this.position.x +
           this.geometry.parameters.width / 2 +
-          nextTo.geometry.parameters.width / 2;
+          nextTo.geometry.parameters.width / 2 +
+          GAP;
         break;
       case ATTACH_TO.LEFT:
         nextTo.position.z = this.position.z;
         nextTo.position.x =
           this.position.x -
           this.geometry.parameters.width / 2 -
-          nextTo.geometry.parameters.width / 2;
+          nextTo.geometry.parameters.width / 2 -
+          GAP;
         break;
     }
   }

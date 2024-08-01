@@ -33,7 +33,6 @@
 </template>
 <script setup>
 import QrcodeVue from "qrcode.vue";
-import { createJoinGameURL } from "@/url";
 import { size } from "lodash-es";
 
 const route = useRoute();

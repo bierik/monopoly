@@ -7,9 +7,6 @@ from core.action.trigger import Triggers
 class ActionRegistry:
     store = {}
 
-    def has_attributes(self, cls, attrs):
-        return all(hasattr(cls, attr) for attr in attrs)
-
     def register(self, action_class):
         superclass_names = [subclass.__name__ for subclass in action_class.__mro__]
         if "Action" not in superclass_names:
@@ -29,6 +26,7 @@ class ActionRegistry:
         return self.get_action_key(name) in self.store
 
     def for_name(self, name):
+        name = self.get_action_key(name)
         if name not in self.store:
             raise ActionNotFoundError
         return self.store[name]

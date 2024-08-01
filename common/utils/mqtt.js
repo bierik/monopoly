@@ -1,5 +1,4 @@
 import mqtt from "mqtt";
-import { toRef } from "@vueuse/core";
 
 const topicHandlers = new Map();
 
@@ -40,6 +39,6 @@ export function onMessage(topic, callback) {
     },
     {
       immediate: true,
-    },
+    }
   );
 }

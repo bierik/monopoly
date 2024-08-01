@@ -1,10 +1,17 @@
-import * as THREE from "three";
-import * as YUKA from "yuka";
+import { AnimationMixer } from "three";
 import loadModel from "@/character/models";
 import { actionsFromMixer } from "@/character/animations";
 import { STATES, IdleState, WalkState, RunState } from "@/character/states";
+import {
+  StateMachine,
+  EventDispatcher,
+  Vehicle,
+  Vector3,
+  Path,
+  FollowPathBehavior,
+} from "yuka";
 
-class CharacterStateMachine extends YUKA.StateMachine {
+class CharacterStateMachine extends StateMachine {
   constructor(owner) {
     super(owner);
     this.add(STATES.IDLE, new IdleState());
@@ -14,7 +21,7 @@ class CharacterStateMachine extends YUKA.StateMachine {
   }
 }
 
-class CharacterEventDispatcher extends YUKA.EventDispatcher {
+class CharacterEventDispatcher extends EventDispatcher {
   constructor(owner) {
     super();
     this.owner = owner;
@@ -25,11 +32,11 @@ class CharacterEventDispatcher extends YUKA.EventDispatcher {
   }
 }
 
-export default class Character extends YUKA.Vehicle {
+export default class Character extends Vehicle {
   constructor({ model, scale = 1, board, target = "start", identifier }) {
     super();
     this.identifier = identifier;
-    this.scale = new YUKA.Vector3(scale, scale, scale);
+    this.scale = new Vector3(scale, scale, scale);
     this.model = model;
     this.board = board;
     this.eventDispatcher = new CharacterEventDispatcher(this);
@@ -46,7 +53,7 @@ export default class Character extends YUKA.Vehicle {
   }
 
   loadActions(actions = []) {
-    this.mixer = new THREE.AnimationMixer(this.model);
+    this.mixer = new AnimationMixer(this.model);
     this.actions = actionsFromMixer(this.mixer, actions);
   }
 
@@ -59,22 +66,19 @@ export default class Character extends YUKA.Vehicle {
 
   pathTo(target) {
     const path = this.board.buildPath(this.standsOn.name, target.name);
-    const yukaPath = new YUKA.Path();
+    const yukaPath = new Path();
     path.forEach((node) => {
       yukaPath.add(this.board.tileForName(node).toYUKAVector());
     });
     const freeTargetSpot = target.occupySpot(this);
     yukaPath.add(
-      new YUKA.Vector3(freeTargetSpot.x, freeTargetSpot.y, freeTargetSpot.z),
+      new Vector3(freeTargetSpot.x, freeTargetSpot.y, freeTargetSpot.z),
     );
     return yukaPath;
   }
 
   applyTargetSteering(target) {
-    this.followPathBehavior = new YUKA.FollowPathBehavior(
-      this.pathTo(target),
-      10,
-    );
+    this.followPathBehavior = new FollowPathBehavior(this.pathTo(target), 10);
     this.steering.add(this.followPathBehavior);
   }
 
@@ -117,6 +121,7 @@ export default class Character extends YUKA.Vehicle {
     this.standsOn = tile;
     this.seekTo = tile;
     const freeSpot = tile.occupySpot(this);
+    freeSpot.y = 0.5 * this.scale.y;
     this.position.copy(freeSpot);
   }
 

@@ -1,6 +1,7 @@
 import { defineNuxtConfig } from "nuxt/config";
 
 export default defineNuxtConfig({
+  extends: ["../common"],
   devtools: { enabled: false },
   ssr: false,
   app: {
@@ -21,13 +22,12 @@ export default defineNuxtConfig({
         "lodash-es",
         "mqtt",
         "three/addons/loaders/GLTFLoader.js",
+        "three/addons/controls/OrbitControls.js",
+        "yuka",
       ],
     },
     build: {
       target: "esnext",
     },
-  },
-  experimental: {
-    scanPageMeta: false,
   },
 });
