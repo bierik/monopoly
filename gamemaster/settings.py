@@ -90,6 +90,15 @@ class Base(Configuration):
     MQTT_HOST = "mosquitto"
     MQTT_PORT = 1883
 
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.s3.S3Storage",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+
 
 class Development(Base):
     SECRET_KEY = "secret"  # noqa: S105
@@ -106,10 +115,10 @@ class Development(Base):
         },
     }
 
-    def MEDIA_ROOT(self):  # noqa: N802
-        return self.BASE_DIR / "media"
-
-    MEDIA_URL = "/media/"
+    AWS_ACCESS_KEY_ID = "admin"
+    AWS_SECRET_ACCESS_KEY = "password"  # noqa: S105
+    AWS_STORAGE_BUCKET_NAME = "development"
+    AWS_S3_ENDPOINT_URL = "http://localhost:30000"
 
 
 class Testing(Base):
@@ -126,16 +135,13 @@ class Testing(Base):
             "PORT": "20000",
         },
     }
-    STORAGES = {
-        "default": {
-            "BACKEND": "django.core.files.storage.InMemoryStorage",
-        },
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    }
+
+    AWS_ACCESS_KEY_ID = "admin"
+    AWS_SECRET_ACCESS_KEY = "password"  # noqa: S105
+    AWS_STORAGE_BUCKET_NAME = "test"
+    AWS_S3_ENDPOINT_URL = "http://localhost:30000"
+
     VALIDATE_GLTF = False
-    MEDIA_URL = "/media/"
 
     MQTT_HOST = "localhost"
     MQTT_PORT = 1883

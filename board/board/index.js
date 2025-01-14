@@ -3,7 +3,14 @@ import SideTile from "@/board/side_tile";
 import Character from "@/character";
 import { first, drop, findIndex, find, size } from "lodash-es";
 import loadTexture from "@/board/texture";
-import { Box3, Group, Vector3, MeshStandardMaterial } from "three";
+import {
+  Box3,
+  Group,
+  Vector3,
+  MeshStandardMaterial,
+  PlaneGeometry,
+  Mesh,
+} from "three";
 import { EntityManager } from "yuka";
 
 const TILE_TYPE = {
@@ -17,6 +24,13 @@ export default class Board {
     this.characterManager = new EntityManager();
     this.structure = structure;
     this.buildBoard();
+    const ground = new Mesh(
+      new PlaneGeometry(80, 80),
+      new MeshStandardMaterial({ color: "green" }),
+    );
+    ground.rotateX(-Math.PI / 2);
+    ground.position.set(-20, 0, -20);
+    this.model.add(ground);
     const box = new Box3().setFromObject(this.model);
     const center = new Vector3();
     box.getCenter(center);

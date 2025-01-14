@@ -308,13 +308,10 @@ class ActionTestCase(APITestCase):
             mqtt_publish.mock_calls,
         )
 
-    # def test_validates_action_context(self):
-    #     with self.assertRaisesMessage(ValidationError, ""):
-    #         Tile.objects.create(
-    #             identifier="test",
-    #             type=TileTypes.CORNER,
-    #             direction=Direction.BOTTOM,
-    #             board=self.board,
-    #             order=1,
-    #             action_context={"unknown": 1, "punishment": "not a number"},
-    #         )
+        self.assertIn(
+            mock.call(
+                f"game/{participation.game.pk}/action",
+                {"id": participation.pk, "action": {"title": "Title", "text": "Text"}},
+            ),
+            mqtt_publish.mock_calls,
+        )

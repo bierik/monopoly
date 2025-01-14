@@ -39,6 +39,7 @@ services:
       - ./board:/app/board
       - ./common:/app/common
       - /app/board/node_modules
+
     profiles: [dev, test]
 
   gamemaster:
@@ -55,7 +56,7 @@ services:
       PARTICIPATIONS: 2
     stdin_open: true
     tty: true
-    profiles: [dev, test]
+    profiles: [dev]
 
   player:
     container_name: player
@@ -92,3 +93,38 @@ services:
     profiles: [test]
     tmpfs:
       - /var/lib/postgresql
+
+  minio:
+    image: minio/minio
+    ports:
+      - "30000:9000"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password
+      MINIO_BROWSER_REDIRECT_URL: http://localhost:10000/minio/
+    profiles: [dev]
+    command: server --console-address :9001 /data
+    volumes:
+      - ./var/data/minio:/data
+    healthcheck:
+      test: timeout 5s bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1
+      interval: 5s
+      retries: 3
+      start_period: 5s
+      timeout: 5s
+
+  create-s3-buckets:
+    image: minio/mc
+    depends_on:
+      minio:
+          condition: service_healthy
+    profiles: [dev, test]
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set minio http://minio:9000/ admin password;
+      /usr/bin/mc mb minio/test;
+      /usr/bin/mc mb minio/development;
+      /usr/bin/mc anonymous set public minio/test;
+      /usr/bin/mc anonymous set public minio/development;
+      exit 0;
+      "

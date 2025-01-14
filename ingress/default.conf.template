@@ -7,6 +7,9 @@ upstream player {
 upstream board {
     server board:3000;
 }
+upstream minio {
+    server minio:9001;
+}
 
 server {
     listen       80;
@@ -16,7 +19,7 @@ server {
     server_tokens off;
     client_max_body_size 25M;
 
-    location ~* ^/(api|media|static)(/.*)?$ {
+    location ~* ^/(api|static)(/.*)?$ {
         proxy_pass http://gamemaster/gamemaster/$1$2;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header Host $http_host;
@@ -73,6 +76,23 @@ server {
         proxy_set_header Connection "Upgrade";
         proxy_set_header Host $host;
         proxy_cache_bypass $http_upgrade;
+    }
+
+    location /minio/ {
+        rewrite   ^/minio/(.*) /$1 break;
+        proxy_pass http://minio;
+
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # This allows WebSocket connections
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
     }
 
     # redirect server error pages to the static page /50x.html

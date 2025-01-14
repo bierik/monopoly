@@ -49,7 +49,7 @@ class E2ETestCase(StaticLiveServerTestCase):
     def setUpClass(cls):
         super().setUpClass()
         cls.playwright = sync_playwright().start()
-        cls.browser = cls.playwright.chromium.launch()
+        cls.browser = cls.playwright.chromium.launch(headless=False)
         cls.expect = expect
 
     @classmethod

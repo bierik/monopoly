@@ -1,6 +1,11 @@
 import random
 import re
+from pathlib import Path
 
+from django.core.files.uploadedfile import SimpleUploadedFile
+
+from core.action.built_in_actions import PunishAction, StartAction
+from core.board.models import Board, Direction, Tile, TileTypes
 from core.device.models import Device
 from core.e2e_tests.testcase import E2ETestCase
 from core.game.models import Game
@@ -140,3 +145,37 @@ class GameRegistrationTestCase(E2ETestCase):
             participation.balance = 1500
             participation.save()
             self.expect(player_page.get_by_test_id("participation-balance")).to_have_text("1’500 M")  # noqa: RUF001
+
+    def test_renders_action(self):
+        board = Board.objects.create(name="board")
+
+        with (Path(__file__).parent / ".." / "board" / "fixtures" / "texture.webp").open("rb") as texture_file:
+            texture = SimpleUploadedFile("texture.webp", texture_file.read(), "image/webp")
+
+        Tile.objects.create(
+            board=board,
+            identifier="start",
+            type=TileTypes.CORNER,
+            direction=Direction.LEFT,
+            texture=texture,
+            action=StartAction,
+        )
+        Tile.objects.create(
+            board=board,
+            identifier="punish",
+            type=TileTypes.CORNER,
+            direction=Direction.LEFT,
+            texture=texture,
+            action=PunishAction,
+        )
+        device = Device.objects.create()
+        game = Game.objects.create(owner=self.player, board=board, device=device, max_participations=1)
+        participation = game.join(self.player, self.zombie)
+        game.start()
+
+        with self.board_page() as board_page:
+            inject_device_token(board_page, device)
+            board_page.goto(f"{self.board_base_url}/game/{game.id}")
+            breakpoint()
+
+            board_page.pause()
