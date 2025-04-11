@@ -7,27 +7,27 @@ readme = "README.md"
 package-mode = false
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.13"
+python = ">=3.13,<4"
 paho-mqtt = "^2.1.0"
-django = "^5.0.6"
-django-extensions = "^3.2.3"
-djangorestframework = "^3.14.0"
-pydash = "^8.0.2"
-drf-standardized-errors = "^0.14.0"
+django = "^5.2"
+django-extensions = "^4.1"
+djangorestframework = "^3.16.0"
+pydash = "^8.0.5"
+drf-standardized-errors = "^0.14.1"
 django-ordered-model = "^3.7.4"
-pygltflib = "^1.16.1"
-pytest-django = "^4.7.0"
-django-configurations = "^2.5"
-python-statemachine = "^2.3.4"
-drf-spectacular = "^0.27.2"
-psycopg = {extras = ["binary"], version = "^3.2.1"}
+pygltflib = "^1.16.3"
+pytest-django = "^4.11.1"
+django-configurations = "^2.5.1"
+python-statemachine = "^2.5.0"
+drf-spectacular = "^0.28.0"
+psycopg = {extras = ["binary"], version = "^3.2.6"}
 
 
 [tool.poetry.group.dev.dependencies]
-uvicorn = "^0.30.3"
-pytest-django = "^4.7.0"
-ruff = "^0.5.4"
-pytest-playwright = "^0.5.1"
+uvicorn = "^0.34.0"
+pytest-django = "^4.11.1"
+ruff = "^0.11.5"
+pytest-playwright = "^0.7.0"
 
 [build-system]
 requires = ["poetry-core"]
