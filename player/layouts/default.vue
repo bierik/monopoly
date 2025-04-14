@@ -8,7 +8,7 @@
   <div class="container mx-auto p-2">
     <slot />
   </div>
-  <div class="btm-nav">
+  <div class="dock">
     <nuxt-link
       class="text-primary"
       active-class="active"

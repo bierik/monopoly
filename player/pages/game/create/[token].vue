@@ -1,26 +1,26 @@
 <template>
   <NuxtLayout name="full">
     <h1 class="mb-4 text-2xl">Neues Spiel erstellen</h1>
-    <form class="flex flex-col" @submit.prevent="createGame">
-      <label class="form-control w-full">
-        <div class="label">
-          <span class="label-text">Anzahl Spieler</span>
-        </div>
+    <form @submit.prevent="createGame">
+      <fieldset class="fieldset">
+        <label class="label" for="max-participations">
+          <span>Anzahl Spieler</span>
+        </label>
         <input
+          id="max-participations"
           v-model="maxParticipations"
           autofocus
           type="number"
-          class="input w-full outline"
+          class="input outline"
         />
-      </label>
-      <label class="form-control w-full">
-        <div class="label">
-          <span class="label-text">Spielbrett</span>
-        </div>
+        <label class="label" for="board">
+          <span>Spielbrett</span>
+        </label>
         <select
+          id="board"
           v-model="board"
           placeholder="Spielbrett"
-          class="select w-full outline"
+          class="select outline"
         >
           <option
             v-for="boardOption in boards"
@@ -30,12 +30,11 @@
             {{ boardOption.name }}
           </option>
         </select>
-      </label>
-      <label class="form-control w-full">
-        <div class="label">
-          <span class="label-text">Startkapital</span>
-        </div>
+        <label class="label" for="balance">
+          <span>Startkapital</span>
+        </label>
         <input
+          id="balance"
           v-model.number="initialBalance"
           type="range"
           :min="minBalance"
@@ -43,16 +42,16 @@
           :step="stepBalance"
           class="range range-primary"
         />
-        <div class="flex w-full justify-between px-2 text-xs">
+        <div class="flex justify-between px-2 text-xs">
           <span v-for="measure in balanceMeasures" :key="measure">{{
             measure
           }}</span>
         </div>
-      </label>
+      </fieldset>
       <button
         type="submit"
         data-testid="create-new-game-button"
-        class="btn btn-primary mt-4"
+        class="btn btn-primary mt-4 w-full"
       >
         Erstellen
       </button>
