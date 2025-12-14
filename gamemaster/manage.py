@@ -1,20 +1,15 @@
-#!/usr/bin/env python
 import os
 import sys
 
 
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app.settings")
+if sys.platform == "darwin":
+    os.environ.setdefault("DJANGO_CONFIGURATION", "Testing")
+
+
 def main():
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings")
-    os.environ.setdefault("DJANGO_CONFIGURATION", "Development")
-    try:
-        from configurations.management import execute_from_command_line
-    except ImportError as exc:
-        err = (
-            "Couldn't import Django. Are you sure it's installed and "
-            "available on your PYTHONPATH environment variable? Did you "
-            "forget to activate a virtual environment?"
-        )
-        raise ImportError(err) from exc
+    from configurations.management import execute_from_command_line  # noqa: PLC0415
+
     execute_from_command_line(sys.argv)
 
 

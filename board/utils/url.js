@@ -1,12 +1,5 @@
-function pathJoin(...parts) {
-  const sep = "/";
-  return parts.join(sep).replace(new RegExp(sep + "{1,}", "g"), sep);
-}
-
 export function createPlayerURL(path) {
-  const origin = new URL(window.location.origin);
-  origin.pathname = pathJoin("/player", path);
-  return origin.toString();
+  return `https://player.local:8000${path}`;
 }
 
 export function createCreateGameURL(token) {

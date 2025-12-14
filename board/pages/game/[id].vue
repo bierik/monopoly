@@ -24,13 +24,13 @@ const aspect = windowWidth.value / windowHeight.value;
 const route = useRoute();
 
 const { data: game } = await useAsyncData("game", () =>
-  api(`/game/${route.params.id}/`),
+  api(`/game/${route.params.id}`),
 );
 const { data: lobby } = await useAsyncData("lobby", () =>
-  api(`/game/${route.params.id}/lobby/`),
+  api(`/game/${route.params.id}/lobby`),
 );
 const { data: boardStructure } = await useAsyncData("board", () =>
-  api(`/board/${toValue(game).board_id}/`),
+  api(`/board/${toValue(game).board_id}`),
 );
 
 onMounted(async () => {

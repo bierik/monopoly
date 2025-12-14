@@ -1,16 +1,15 @@
 {
   "folders": [
-    { "path": "./board" },
-    { "path": "./gamemaster" },
-    { "path": "./mosquitto" },
-    { "path": "./player" },
-    { "path": "./common" },
-    {
-      "name": "monopoly",
-      "path": "."
-    }
+    { "name": "board","path": "./board" },
+    { "name": "gamemaster","path": "./gamemaster" },
+    { "name": "mosquitto","path": "./mosquitto" },
+    { "name": "player","path": "./player" },
+    { "name": "ingress","path": "./ingress" },
+    { "name": "monopoly", "path": "." }
   ],
   "settings": {
+    "python.testing.pytestEnabled": false,
+    "ruff.enable": true,
     "[python]": {
       "editor.defaultFormatter": "charliermarsh.ruff",
       "editor.formatOnSave": true,

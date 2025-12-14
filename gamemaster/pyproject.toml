@@ -1,51 +1,56 @@
-[tool.poetry]
-name = "gamemaster"
-version = "0.1.0"
-description = ""
-authors = ["Kevin Bieri <bierike@gmail.com>"]
-readme = "README.md"
-package-mode = false
+[project]
+name = "monopoly-gamemaster"
+version = "0"
+requires-python = "==3.14.*"
+dependencies = [
+  "paho-mqtt",
+  "django",
+  "django-extensions",
+  "djangorestframework ",
+  "pydash",
+  "drf-standardized-errors ",
+  "django-ordered-model",
+  "pygltflib ",
+  "pytest-django ",
+  "django-configurations",
+  "python-statemachine",
+  "drf-spectacular ",
+  "psycopg[binary]",
+  "uvicorn",
+  "pytest-playwright",
+  "servestatic>=3.1.0",
+  "django-storages[s3]>=1.14.6",
+]
+[dependency-groups]
+dev = [
+    "pytest-django",
+    "ruff",
+]
 
-[tool.poetry.dependencies]
-python = ">=3.13,<4"
-paho-mqtt = "^2.1.0"
-django = "^5.2"
-django-extensions = "^4.1"
-djangorestframework = "^3.16.0"
-pydash = "^8.0.5"
-drf-standardized-errors = "^0.14.1"
-django-ordered-model = "^3.7.4"
-pygltflib = "^1.16.3"
-pytest-django = "^4.11.1"
-django-configurations = "^2.5.1"
-python-statemachine = "^2.5.0"
-drf-spectacular = "^0.28.0"
-psycopg = {extras = ["binary"], version = "^3.2.6"}
+[tool.uv]
+package = true
 
-
-[tool.poetry.group.dev.dependencies]
-uvicorn = "^0.34.0"
-pytest-django = "^4.11.1"
-ruff = "^0.11.5"
-pytest-playwright = "^0.7.0"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[tool.setuptools.packages.find]
+include = ["gamemaster"]
 
 [tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "settings"
+DJANGO_SETTINGS_MODULE = "app.settings"
 DJANGO_CONFIGURATION = "Testing"
-python_files = "tests.py test_*.py *_tests.py"
-addopts = "--nomigrations"
+testpaths = ["tests"]
+addopts = "--nomigrations --tb=short"
+cache-dir = "/tmp/monopoly/ruff_cache"
 
 [tool.ruff]
 line-length = 125
+cache-dir = "/tmp/monopoly/ruff_cache"
 
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = ["D", "ANN", "PT", "ARG001", "ARG002", "RUF012", "ISC", "COM"]
 
-[tool.ruff.lint.per-file-ignores]
-"core/migrations/*" = ["E501"]
-"core/**/test*.py" = ["S107", "S106", "S105", "S311"]
+[tool.ruff.lint.isort]
+force-single-line = true
+lines-after-imports = 2
+known-first-party = ["gamemaster", "tests"]
+from-first = false
+case-sensitive = false

@@ -21,11 +21,11 @@ const router = useRouter();
 const user = useUserStore();
 
 const { data: game, refresh: refreshGame } = await useAsyncData("game", () =>
-  api(`/game/${route.params.id}/`),
+  api(`/game/${route.params.id}`),
 );
 
 async function startGame() {
-  await api(`/game/${route.params.id}/start/`, { method: "POST" });
+  await api(`/game/${route.params.id}/start`, { method: "POST" });
 }
 
 const gameChangedMessage = computed(() => `game/${route.params.id}/changed`);

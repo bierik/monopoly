@@ -42,7 +42,7 @@ function paintOutline(detectedCodes, ctx) {
   ctx.stroke();
 }
 
-const joinPattern = /^\/game\/(?<gameId>\d.)\/join$/;
+const joinPattern = /^\/game\/(?<gameId>\d+)\/join$/;
 const newPattern = /^\/game\/create\/(?<token>.{36})$/;
 
 function isJoin(path) {

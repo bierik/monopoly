@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+for script in $(ls ./*/bin/$(basename $0)); do
+    echo "> $script"
+    $script
+    echo ""
+done

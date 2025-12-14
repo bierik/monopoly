@@ -7,13 +7,13 @@
           autofocus
           type="text"
           placeholder="Benutzername"
-          class="input mb-4 w-full outline"
+          class="input mb-4 outline"
         />
         <input
           v-model="password"
           type="password"
           placeholder="Passwort"
-          class="input mb-4 w-full outline"
+          class="input mb-4 outline"
         />
         <input
           type="submit"
@@ -35,7 +35,7 @@ const username = ref("");
 const password = ref("");
 
 async function login() {
-  await api("/login/", {
+  await api("/login", {
     method: "POST",
     body: { username: toValue(username), password: toValue(password) },
   });

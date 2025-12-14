@@ -1,22 +1,22 @@
 import { defineNuxtConfig } from "nuxt/config";
+import tailwindcss from "@tailwindcss/vite";
 
 export default defineNuxtConfig({
-  extends: ["../common"],
   devtools: { enabled: false },
   ssr: false,
-  app: {
-    baseURL: "/player/",
-  },
-  modules: ["@nuxtjs/tailwindcss", "@pinia/nuxt", "@nuxt/icon", "@nuxt/eslint"],
+  modules: ["@pinia/nuxt", "@nuxt/icon", "@nuxt/eslint"],
+  css: ["./assets/css/tailwind.css"],
   vite: {
     server: {
       hmr: {
         path: "hmr/",
       },
     },
+    plugins: [tailwindcss()],
     // Pevents dev server from reloading
     optimizeDeps: {
       include: [
+        "vue-qrcode-reader",
         "three",
         "@vueuse/core",
         "lodash-es",

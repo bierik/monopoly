@@ -36,7 +36,7 @@
 const route = useRoute();
 const { data: participation, refresh: refreshParticipation } =
   await useAsyncData("participation", () =>
-    api(`/game/${route.params.id}/participation/`),
+    api(`/game/${route.params.id}/participation`),
   );
 
 const participationChangedMessage = computed(

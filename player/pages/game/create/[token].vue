@@ -69,7 +69,7 @@ const compactNumberFormatter = new Intl.NumberFormat("en", {
   notation: "compact",
 });
 
-const boards = await api("/board/");
+const boards = await api("/board");
 const maxParticipations = ref();
 const board = ref(first(boards).pk);
 const initialBalance = ref(3000);
@@ -81,7 +81,7 @@ const balanceMeasures = range(minBalance, maxBalance + stepBalance, stepBalance)
   .map(compactNumberFormatter.format);
 
 async function createGame() {
-  const game = await api("/game/", {
+  const game = await api("/game", {
     body: {
       max_participations: toValue(maxParticipations),
       board: toValue(board),

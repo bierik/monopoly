@@ -39,10 +39,10 @@ const route = useRoute();
 const router = useRouter();
 
 const { data: lobby, refresh: refreshLobby } = await useAsyncData("lobby", () =>
-  api(`/game/${route.params.id}/lobby/`),
+  api(`/game/${route.params.id}/lobby`),
 );
 const { data: game, refresh: refreshGame } = await useAsyncData("game", () =>
-  api(`/game/${route.params.id}/`),
+  api(`/game/${route.params.id}`),
 );
 
 const gameChangesMessage = computed(() => `game/${route.params.id}/changed`);

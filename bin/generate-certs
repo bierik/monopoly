@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# --- Config ---
+SERVICE="ingress"
+CERT_DIR="$(dirname "$0")/../certs"
+CA_NAME="Local Dev CA"
+
+# --- Prepare ---
+mkdir -p "$CERT_DIR"
+cd "$CERT_DIR"
+
+# --- 1. Create CA ---
+if [ ! -f ca.key ]; then
+  echo "Generating CA..."
+  openssl genrsa -out ca.key 4096
+  openssl req -x509 -new -nodes -key ca.key -sha256 -days 3650 \
+    -subj "/CN=$CA_NAME" \
+    -out ca.crt
+fi
+
+# --- 2. Create server config ---
+cat > server.cnf <<'EOF'
+[req]
+default_bits = 2048
+prompt = no
+default_md = sha256
+req_extensions = req_ext
+distinguished_name = dn
+
+[dn]
+CN = ingress
+
+[req_ext]
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = ingress
+DNS.2 = test-ingress
+DNS.3 = localhost
+DNS.4 = player.local
+DNS.5 = board.local
+DNS.6 = gamemaster.local
+DNS.7 = mqtt.local
+IP.1  = 127.0.0.1
+EOF
+
+# --- 3. Generate server key & CSR ---
+if [ ! -f server.key ]; then
+  echo "Generating server key and CSR..."
+  openssl genrsa -out server.key 2048
+  openssl req -new -key server.key -out server.csr -config server.cnf
+fi
+
+# --- 4. Sign server certificate with CA ---
+if [ ! -f server.crt ]; then
+  echo "Signing server certificate with CA..."
+  openssl x509 -req -in server.csr \
+    -CA ca.crt -CAkey ca.key -CAcreateserial \
+    -out server.crt -days 825 -sha256 \
+    -extensions req_ext -extfile server.cnf
+fi
+
+# --- 5. Add CA to macOS system trust ---
+echo "Adding CA to macOS System Keychain..."
+sudo security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain ca.crt
+
+echo "Done! Certificates are in $CERT_DIR"

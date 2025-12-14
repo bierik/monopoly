@@ -18,7 +18,7 @@
 const router = useRouter();
 
 const { data } = await useAsyncData("register-device", () =>
-  api("/device/register/", { method: "POST" }),
+  api("/device/register", { method: "POST" }),
 );
 useDeviceToken().value = toValue(data).token;
 

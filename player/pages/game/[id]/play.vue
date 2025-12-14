@@ -23,7 +23,7 @@ const route = useRoute();
 
 const { data: participation, refresh: refreshParticipation } =
   await useAsyncData("participation", () =>
-    api(`/game/${route.params.id}/participation/`),
+    api(`/game/${route.params.id}/participation`),
   );
 const participationChangedMessage = computed(
   () => `participation/${toValue(participation).pk}/changed`,
@@ -40,13 +40,13 @@ onMessage(participationChangedMessage, refreshParticipation);
 onMessage(gameChangedMessage, refreshParticipation);
 
 async function rollDice() {
-  await api(`/participation/${toValue(participation).pk}/move/`, {
+  await api(`/participation/${toValue(participation).pk}/move`, {
     method: "POST",
   });
 }
 
 async function endTurn() {
-  await api(`/participation/${toValue(participation).pk}/end_turn/`, {
+  await api(`/participation/${toValue(participation).pk}/end_turn`, {
     method: "POST",
   });
 }

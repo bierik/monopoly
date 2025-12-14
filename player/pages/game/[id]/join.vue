@@ -44,13 +44,13 @@ const route = useRoute();
 const router = useRouter();
 
 const { data: characters } = await useAsyncData("characters", () =>
-  api("/character/"),
+  api("/character"),
 );
 
 const selectedCharacter = ref();
 
 async function joinGame() {
-  await api(`/game/${route.params.id}/join/`, {
+  await api(`/game/${route.params.id}/join`, {
     method: "POST",
     body: { character: toValue(selectedCharacter) },
   });

@@ -11,7 +11,7 @@ export const useUserStore = defineStore({
   },
   actions: {
     async fetch() {
-      const user = await api("/authentication/me/");
+      const user = await api("/authentication/me");
       this.pk = user.pk;
       this.username = user.username;
       this.name = user.full_name;

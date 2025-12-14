@@ -1,3 +1,5 @@
+resolver 127.0.0.11 valid=10s;
+
 upstream gamemaster {
     server ${GAMEMASTER_UPSTREAM};
 }
@@ -9,75 +11,91 @@ upstream board {
 }
 
 server {
-    listen       80;
-    listen  [::]:80;
-    server_name  localhost;
-    charset utf-8;
-    server_tokens off;
-    client_max_body_size 25M;
+    listen 8000 ssl;
+    server_name gamemaster.local;
+    ssl_certificate /etc/nginx/certs/server.crt;
+    ssl_certificate_key /etc/nginx/certs/server.key;
 
-    location ~* ^/(api|media|static)(/.*)?$ {
-        proxy_pass http://gamemaster/gamemaster/$1$2;
+    location / {
+        proxy_pass http://gamemaster/;
+        proxy_set_header Host $host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header Host $http_host;
         proxy_redirect off;
-        client_max_body_size 25M;
     }
+}
 
-    location ~* ^/player/_nuxt/hmr($|/) {
-        proxy_pass http://player;
+server {
+    listen 8000 ssl;
+    server_name player.local;
+    ssl_certificate /etc/nginx/certs/server.crt;
+    ssl_certificate_key /etc/nginx/certs/server.key;
+
+    location / {
+        proxy_pass http://player/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
+        proxy_set_header Connection "Upgrade";
         proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-
-    location ~* ^/player(/.*)?$ {
-        proxy_pass http://player/player$1;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header Host $http_host;
         proxy_redirect off;
-        client_max_body_size 25M;
     }
 
-    location ~* ^/board/_nuxt/hmr($|/) {
-        proxy_pass http://board;
+    location /api/ {
+        proxy_pass http://gamemaster/api/;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_redirect off;
+    }
+}
+
+server {
+    listen 8000 ssl;
+    server_name board.local;
+    ssl_certificate /etc/nginx/certs/server.crt;
+    ssl_certificate_key /etc/nginx/certs/server.key;
+
+    location / {
+        proxy_pass http://board/;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
+        proxy_set_header Connection "Upgrade";
         proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-
-    location ~* ^/board(/.*)?$ {
-        proxy_pass http://board/board$1;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header Host $http_host;
         proxy_redirect off;
-        client_max_body_size 25M;
     }
 
-    location ~* ^/gamemaster(/.*)?$ {
-        proxy_pass http://gamemaster/gamemaster$1;
+    location /api/ {
+        proxy_pass http://gamemaster/api/;
+        proxy_set_header Host $host;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header Host $http_host;
         proxy_redirect off;
-        client_max_body_size 25M;
     }
+}
 
-    location ~* ^/mqtt($|/) {
+server {
+    listen 8000 ssl;
+    server_name mqtt.local;
+    ssl_certificate /etc/nginx/certs/server.crt;
+    ssl_certificate_key /etc/nginx/certs/server.key;
+
+    location /mqtt {
         proxy_pass http://mosquitto:9001;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "Upgrade";
         proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
     }
+}
 
-    # redirect server error pages to the static page /50x.html
-    error_page   500 502 503 504  /50x.html;
-    location = /50x.html {
-        root   /usr/share/nginx/html;
+server {
+    listen 9000;
+    server_name storage.local;
+
+    location / {
+        proxy_pass http://storage.local:9000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
     }
 }

@@ -1,31 +1,34 @@
 services:
   ingress:
     build:
-      context: ingress
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ingress/Dockerfile
+      target: dev
     ports:
-      - 5000:80
+      - 8000:8000
     environment:
       - GAMEMASTER_UPSTREAM=gamemaster:8000
     profiles: [dev]
+    networks:
+      - devnet
 
   test-ingress:
     build:
       context: ingress
-      dockerfile: Dockerfile
+      target: test
     ports:
-      - 10000:80
-    environment:
-      - GAMEMASTER_UPSTREAM=host.docker.internal:50000
+      - 10000:8000
     profiles: [test]
 
   mosquitto:
-    image: eclipse-mosquitto:2.0.21
+    image: eclipse-mosquitto:2.0.22
     volumes:
       - ./mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf
-    ports:
-      - 1883:1883
+      - /mosquitto/data
+      - /mosquitto/log
     profiles: [dev, test]
+    networks:
+      - devnet
 
   board:
     build:
@@ -33,24 +36,25 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./board:/app/board
-      - ./common:/app/common
       - /app/board/node_modules
     profiles: [dev, test]
+    networks:
+      - devnet
 
   gamemaster:
     build:
-      context: gamemaster
-      dockerfile: Dockerfile
+      context: ./gamemaster
+      target: dev
     volumes:
-      - ./gamemaster:/app
+      - ./gamemaster/docker/entrypoint.sh:/app/entrypoint.sh
+      - ./gamemaster/app:/app/app
     environment:
-      DJANGO_DATABASE_PASSWORD: postgres
-      DJANGO_DATABASE_HOST: db
-      DJANGO_DATABASE_USER: postgres
       PARTICIPATIONS: 2
     stdin_open: true
     tty: true
     profiles: [dev, test]
+    networks:
+      - devnet
 
   player:
     build:
@@ -58,29 +62,77 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./player:/app/player
-      - ./common:/app/common
       - /app/player/node_modules
     profiles: [dev, test]
+    networks:
+      - devnet
 
   db:
-    image: postgres:17.4-alpine3.21
+    image: postgres:18-alpine3.22
     volumes:
-      - ./var/data/db:/var/lib/postgresql/data
+      - ./var/db:/var/lib/postgresql/data/18
     environment:
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: secret
       POSTGRES_USER: postgres
       POSTGRES_DB: postgres
     profiles: [dev]
+    networks:
+      - devnet
 
   test-db:
-    image: postgres:17.4-alpine3.21
+    image: postgres:18-alpine3.22
     ports:
       - 20000:5432
     command: postgres --fsync=off --synchronous-commit=off --full-page-writes=off
     environment:
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: secret
       POSTGRES_USER: postgres
       POSTGRES_DB: postgres
     profiles: [test]
     tmpfs:
-      - /var/lib/postgresql
+      - /var/lib/postgresql/data/18
+
+  storage.local:
+    image: minio/minio
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password
+    ports:
+      - "9001:9001"
+      - "9000:9000"
+    profiles: [test, dev]
+    volumes:
+      - ./var/s3:/data
+      - ./certs/server.key:/root/.minio/certs/private.key
+      - ./certs/server.crt:/root/.minio/certs/public.crt
+    command: server --console-address :9001 /data
+    healthcheck:
+      test: timeout 5s bash -c ':> /dev/tcp/127.0.0.1/9000' || exit 1
+      interval: 5s
+      retries: 3
+      start_period: 5s
+      timeout: 5s
+    networks:
+      - devnet
+
+  storage-init:
+    image: minio/mc
+    environment:
+      - MC_INSECURE=true
+    profiles: [test, dev]
+    depends_on:
+      storage.local:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local https://storage.local:9000 admin password &&
+      mc mb -p local/monopoly || true &&
+      mc mb -p local/monopoly-test || true
+      "
+    restart: "no"
+    networks:
+      - devnet
+
+networks:
+  devnet:
+    driver: bridge
